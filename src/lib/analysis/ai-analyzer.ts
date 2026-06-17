@@ -61,6 +61,8 @@ export interface SugestaoEnquadramento {
   area_total_construida?: string;
   justificativa: string;
   its_aplicaveis?: string[];
+  /** Carga de incêndio (MJ/m²) extraída do cálculo presente no memorial descritivo, se houver */
+  carga_incendio_mjm2?: number;
 }
 
 export interface Encontrado {
