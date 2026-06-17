@@ -1,0 +1,371 @@
+[
+  {
+    "code": "LEI-12929-2013",
+    "filename": "lei_no_12929_de_27_12_2013_-_estadual_-_bahia_-_legisweb.pdf",
+    "file_hash": "45f2c6294c4f",
+    "pages": 5,
+    "char_count": 22189,
+    "chunk_count": 15,
+    "ok": true
+  },
+  {
+    "code": "DEC-16302-2015",
+    "filename": "decreto_no_16.302_de_27_ago_15_-_regulamenta_a_lei_no_12.929.pdf",
+    "file_hash": "2196d1aa578e",
+    "pages": 46,
+    "char_count": 112964,
+    "chunk_count": 74,
+    "ok": true
+  },
+  {
+    "code": "PORT-061-2017",
+    "filename": "2017_061_portaria_que_regula_a_autorizacao_revisao_final_1.pdf",
+    "file_hash": "fab9dd9bdaec",
+    "pages": 6,
+    "char_count": 10023,
+    "chunk_count": 7,
+    "ok": true
+  },
+  {
+    "code": "IT-01",
+    "filename": "it_no_01.2016_homologa_as_alteracoes_da_instrucao_tecnica_do_corpo_de_bombeiros_militar_da_bahia_-_procedimentos_administrativos_e_da_outras_providencias.pdf",
+    "file_hash": "036baf6ac484",
+    "pages": 55,
+    "char_count": 99064,
+    "chunk_count": 67,
+    "ok": true
+  },
+  {
+    "code": "IT-02",
+    "filename": "it_02.2016_-_processo_administrativo_infracional.pdf",
+    "file_hash": "43771e787232",
+    "pages": 44,
+    "char_count": 94005,
+    "chunk_count": 62,
+    "ok": true
+  },
+  {
+    "code": "IT-03",
+    "filename": "it_03.2016_-_terminologia_de_seguranca_contra_incendio.pdf",
+    "file_hash": "d867354d06ff",
+    "pages": 57,
+    "char_count": 141643,
+    "chunk_count": 94,
+    "ok": true
+  },
+  {
+    "code": "IT-04",
+    "filename": "it_04.2016_-_simbolos_graficos.pdf",
+    "file_hash": "228d3a31efe8",
+    "pages": 20,
+    "char_count": 13655,
+    "chunk_count": 9,
+    "ok": true
+  },
+  {
+    "code": "IT-05",
+    "filename": "it_05_2021_credenciamento_de_instrutores_e_bombeiroscivis_e_de_empresas_da_area_de_seguranca_contra_incendio_e_panico_anexos_disponiveis_republicacao_da_portaria_027.pdf",
+    "file_hash": "08a91a0e96a7",
+    "pages": 23,
+    "char_count": 44044,
+    "chunk_count": 28,
+    "ok": true
+  },
+  {
+    "code": "IT-06",
+    "filename": "it_06-2016_acesso_de_viatuara_na_edificacao.pdf",
+    "file_hash": "439f2b55129c",
+    "pages": 7,
+    "char_count": 3402,
+    "chunk_count": 3,
+    "ok": true
+  },
+  {
+    "code": "IT-07",
+    "filename": "it_07.2016_-_separacao_entre_edificacoes.pdf",
+    "file_hash": "bedabdd22672",
+    "pages": 15,
+    "char_count": 27646,
+    "chunk_count": 19,
+    "ok": true
+  },
+  {
+    "code": "IT-08",
+    "filename": "it_08.2016_-_resistencia_ao_fogo_dos_elementos_de_construcao.pdf",
+    "file_hash": "9b0505250e83",
+    "pages": 18,
+    "char_count": 35723,
+    "chunk_count": 22,
+    "ok": true
+  },
+  {
+    "code": "IT-09",
+    "filename": "it_009.2022_-_homologa_as_alteracoes_na_instrucao_tecnica_do_corpo_de_bombeiros_militar_da_bahia_-_it_no_09_2022_-_compartimentacao_horizontal_e_compartimentacao_vertic_0.pdf",
+    "file_hash": "2a5821c5b88f",
+    "pages": 28,
+    "char_count": 48316,
+    "chunk_count": 32,
+    "ok": true
+  },
+  {
+    "code": "IT-10",
+    "filename": "it_10.2016_-_controle_de_materiais_de_acabamentorevestimento.pdf",
+    "file_hash": "15cff7c9470c",
+    "pages": 13,
+    "char_count": 14392,
+    "chunk_count": 10,
+    "ok": true
+  },
+  {
+    "code": "IT-11",
+    "filename": "it_11.2016_-_saidas_de_emergencia.pdf",
+    "file_hash": "73e773350384",
+    "pages": 29,
+    "char_count": 70823,
+    "chunk_count": 48,
+    "ok": true
+  },
+  {
+    "code": "IT-12",
+    "filename": "it_12.2016_-_centros_esportivos_e_de_exibicao_-_requisitos_de_seguranca_contra_incendio.pdf",
+    "file_hash": "fad5b24ff35c",
+    "pages": 38,
+    "char_count": 62452,
+    "chunk_count": 42,
+    "ok": true
+  },
+  {
+    "code": "IT-13",
+    "filename": "it.cbmba_13._2022_-_pressurizacao_de_escada_de_seguranca.pdf",
+    "file_hash": "f9a4c6eaa178",
+    "pages": 33,
+    "char_count": 99531,
+    "chunk_count": 67,
+    "ok": true
+  },
+  {
+    "code": "IT-14",
+    "filename": "it_14_2017_carga_de_incendio_em_edificacoes_estruturas_e_areas_de_risco_1.pdf",
+    "file_hash": "0560719bd272",
+    "pages": 42,
+    "char_count": 102643,
+    "chunk_count": 66,
+    "ok": true
+  },
+  {
+    "code": "IT-17",
+    "filename": "it_17.2016_-_brigada_de_incendio.pdf",
+    "file_hash": "ab30ea8dee15",
+    "pages": 44,
+    "char_count": 95693,
+    "chunk_count": 63,
+    "ok": true
+  },
+  {
+    "code": "IT-18",
+    "filename": "it_18.2017_-_sistema_de_iluminacao_de_emergencia.pdf",
+    "file_hash": "91e6148efd97",
+    "pages": 3,
+    "char_count": 4809,
+    "chunk_count": 4,
+    "ok": true
+  },
+  {
+    "code": "IT-19",
+    "filename": "it_19.2017-_sistema_de_deteccao_e_alarme_de_incendio.pdf",
+    "file_hash": "f409f640aba4",
+    "pages": 4,
+    "char_count": 9308,
+    "chunk_count": 7,
+    "ok": true
+  },
+  {
+    "code": "IT-20",
+    "filename": "it_20.2017_-_sinalizacao_de_emergencia.pdf",
+    "file_hash": "96440f050964",
+    "pages": 29,
+    "char_count": 34618,
+    "chunk_count": 24,
+    "ok": true
+  },
+  {
+    "code": "IT-21",
+    "filename": "it_21.2017_-_sistema_de_protecao_por_extintores_de_incendio.pdf",
+    "file_hash": "9a67f720dcf3",
+    "pages": 5,
+    "char_count": 9322,
+    "chunk_count": 7,
+    "ok": true
+  },
+  {
+    "code": "IT-22",
+    "filename": "it_22.2016_-_sistemas_de_hidrantes_e_de_mangotinhos_para_combate_a_incendio.pdf",
+    "file_hash": "ee7821696ef1",
+    "pages": 26,
+    "char_count": 58507,
+    "chunk_count": 39,
+    "ok": true
+  },
+  {
+    "code": "IT-23",
+    "filename": "it_23.2018_-_sistemas_de_chuveiros_automaticos.pdf",
+    "file_hash": "57696b05b94a",
+    "pages": 14,
+    "char_count": 30633,
+    "chunk_count": 20,
+    "ok": true
+  },
+  {
+    "code": "IT-24",
+    "filename": "it-24-2020_sistema_de_chuveiros_automaticos_para_areas_de_deposito.pdf",
+    "file_hash": "f7dc3cbad404",
+    "pages": 99,
+    "char_count": 149902,
+    "chunk_count": 102,
+    "ok": true
+  },
+  {
+    "code": "IT-26",
+    "filename": "it_26.2021_sistema_fixo_de_gases_para_combate_a_incendio.pdf",
+    "file_hash": "97a04d4f1723",
+    "pages": 5,
+    "char_count": 8925,
+    "chunk_count": 6,
+    "ok": true
+  },
+  {
+    "code": "IT-27",
+    "filename": "it_27.2020_silos.pdf",
+    "file_hash": "7679c68451c4",
+    "pages": 11,
+    "char_count": 18466,
+    "chunk_count": 13,
+    "ok": true
+  },
+  {
+    "code": "IT-28",
+    "filename": "it_28_2021_manipulacao_armazenamento_comercializacao_e_utilizacao_de_gas_liquefeito_de_petroleo.pdf",
+    "file_hash": "6a8b977254b2",
+    "pages": 46,
+    "char_count": 60788,
+    "chunk_count": 42,
+    "ok": true
+  },
+  {
+    "code": "IT-29",
+    "filename": "it_n29.2021_comercializacao_distribuicao_e_utilizacao_de_gas_natural.pdf",
+    "file_hash": "27551c00b5e9",
+    "pages": 6,
+    "char_count": 10702,
+    "chunk_count": 7,
+    "ok": true
+  },
+  {
+    "code": "IT-30",
+    "filename": "it_30.2017_-_fogos_de_artificio_e_pirotecnia.pdf",
+    "file_hash": "45da5c0e201a",
+    "pages": 19,
+    "char_count": 35145,
+    "chunk_count": 23,
+    "ok": true
+  },
+  {
+    "code": "IT-32",
+    "filename": "it_32_2021_produtos_perigosos_em_edificacoes_e_areas_de_risco_rev_final_3.pdf",
+    "file_hash": "083740b9ca13",
+    "pages": 7,
+    "char_count": 15076,
+    "chunk_count": 10,
+    "ok": true
+  },
+  {
+    "code": "IT-33",
+    "filename": "it_33_2021_cobertura_de_sape_piacava_e_similares_rev._final_1_2.pdf",
+    "file_hash": "f8298490d7e6",
+    "pages": 6,
+    "char_count": 7354,
+    "chunk_count": 5,
+    "ok": true
+  },
+  {
+    "code": "IT-34",
+    "filename": "it_34_2021_hidrante_urbano_rev._final_2_0.pdf",
+    "file_hash": "23423e537ded",
+    "pages": 7,
+    "char_count": 9821,
+    "chunk_count": 7,
+    "ok": true
+  },
+  {
+    "code": "IT-35",
+    "filename": "it_35_2021_tunel_rodoviario._rev._final_3.pdf",
+    "file_hash": "ab68e29a794a",
+    "pages": 10,
+    "char_count": 18707,
+    "chunk_count": 12,
+    "ok": true
+  },
+  {
+    "code": "IT-36",
+    "filename": "it_36_2021_patio_de_conteineres_rev._final_5.pdf",
+    "file_hash": "b119a13a509e",
+    "pages": 5,
+    "char_count": 9006,
+    "chunk_count": 6,
+    "ok": true
+  },
+  {
+    "code": "IT-37",
+    "filename": "it_37.2018_-_subestacao_eletrica.pdf",
+    "file_hash": "2ceb7e09a3ad",
+    "pages": 14,
+    "char_count": 22905,
+    "chunk_count": 16,
+    "ok": true
+  },
+  {
+    "code": "IT-39",
+    "filename": "it_39.2016_-_estabelecimentos_destinados_a_restricao_de_liberdade.pdf",
+    "file_hash": "4407521dceb7",
+    "pages": 3,
+    "char_count": 6369,
+    "chunk_count": 5,
+    "ok": true
+  },
+  {
+    "code": "IT-40",
+    "filename": "it_40.2017_-_seguranca_contra_incendio_em_edificacoes_que_compoem_o_patrimonio_historico_ou_cultural.pdf",
+    "file_hash": "e938e2ef5fce",
+    "pages": 15,
+    "char_count": 44090,
+    "chunk_count": 30,
+    "ok": true
+  },
+  {
+    "code": "IT-41",
+    "filename": "it_41.2018_-_inspecao_visual_em_instalacoes_eletricas_de_baixa_tensao.pdf",
+    "file_hash": "50dfa7c619db",
+    "pages": 9,
+    "char_count": 20182,
+    "chunk_count": 14,
+    "ok": true
+  },
+  {
+    "code": "IT-42",
+    "filename": "it_42-2024_-_projeto_tecnico_simplificado.pdf",
+    "file_hash": "814538908660",
+    "pages": 34,
+    "char_count": 90024,
+    "chunk_count": 60,
+    "ok": true
+  },
+  {
+    "code": "IT-43",
+    "filename": "it_43.2016_-_adaptacao_as_normas_de_seguranca_contra_incendio_-_edificacoes_existentes.pdf",
+    "file_hash": "b404b2f9ba3a",
+    "pages": 12,
+    "char_count": 23926,
+    "chunk_count": 17,
+    "ok": true
+  }
+]
