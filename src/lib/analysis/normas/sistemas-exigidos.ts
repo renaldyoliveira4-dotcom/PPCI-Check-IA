@@ -255,6 +255,15 @@ export function determinarSistemasExigidos(params: {
 
 export type TipoProcesso = "PTS" | "PROJETO_TECNICO";
 
+/**
+ * @deprecated Esta função usa um critério de altura (≤ 6m) que NÃO existe
+ * na norma real (IT-42/2024). O critério correto é "até 750 m² de área
+ * construída com no máximo 3 PAVIMENTOS", além de outros requisitos
+ * cumulativos (subsolo, GLP, líquidos inflamáveis, produtos perigosos, etc).
+ * Use `validatePTS` em src/lib/classification/validatePTS.ts, que implementa
+ * os critérios reais do item 5.1 da IT-42/2024. Mantida apenas por
+ * compatibilidade; não usar em código novo.
+ */
 export function definirTipoProcesso(params: {
   area_construida: number;
   altura: number;
