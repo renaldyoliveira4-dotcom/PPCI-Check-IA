@@ -51,6 +51,12 @@ EXTRAÇÃO DE DADOS DA PLANTA:
 - ÁREA TOTAL: use o quadro de áreas PCI, não a área de um pavimento.
 - Retorne campos distintos: "Número de pavimentos" (inteiro), "Área total construída PCI" (m²).
 
+EXTRAÇÃO DA CARGA DE INCÊNDIO (CRÍTICO para IT-22 — hidrantes):
+- Procure no MEMORIAL DESCRITIVO o valor de carga de incêndio calculado, geralmente expresso em MJ/m² (megajoules por metro quadrado), conforme IT-14/CBMBA.
+- Se encontrado, preencha "carga_incendio_mjm2" em "sugestao_enquadramento" com o número exato (sem unidade, ex: 350).
+- Se o memorial NÃO trouxer esse cálculo, NÃO invente um valor — deixe "carga_incendio_mjm2" ausente (omita o campo) e informe isso como pendência no item de hidrantes.
+- NUNCA cite um limiar de área isolado (como "750 m²" ou "300 m²") como critério único de exigência de hidrante. A IT-22/2016 define o Tipo de sistema e a RTI mínima pela Tabela 3, que combina a FAIXA DE ÁREA construída com a CLASSIFICAÇÃO/carga de incêndio (MJ/m²) da edificação — nunca um valor isolado.
+
 CRITÉRIO DA NOTA (0 a 10):
 - Começa em 10.
 - Sistema obrigatório AUSENTE: -2,0 a -3,0 (grave: saídas, extintores, hidrantes).
@@ -90,7 +96,8 @@ Estrutura EXATA do JSON:
     "enquadramento_correto": true,
     "numero_pavimentos": 2,
     "area_total_construida": "826,38 m²",
-    "justificativa": "Área > 750 m², grupo D-1, conforme IT-01 e Decreto 16.302/2015 CBMBA."
+    "carga_incendio_mjm2": 350,
+    "justificativa": "Grupo D-1, conforme IT-01 e Decreto 16.302/2015 CBMBA. Carga de incêndio extraída do memorial."
   },
   "sistemas_auditados": [
     {
@@ -109,14 +116,14 @@ Estrutura EXATA do JSON:
     {
       "sistema": "Hidrantes e mangotinhos",
       "norma": "IT-22",
-      "item_normativo": "IT-22/2016 · Seção 4",
+      "item_normativo": "IT-22/2016 · Tabela 3",
       "exigido": true,
       "situacao": "nao_conforme",
       "evidencia_prancha": "Nenhuma representação de rede de hidrantes, abrigos ou RTI localizada nas pranchas.",
-      "evidencia_memorial": "Memorial não menciona sistema de hidrantes.",
-      "trecho_normativo_resumido": "IT-22/2016 exige sistema de hidrantes para áreas > 750 m².",
-      "observacao": "Sistema obrigatório ausente. Área construída > 750 m² exige IT-22.",
-      "recomendacao": "Incluir rede de hidrantes/mangotinhos, RTI, bomba e abrigos conforme IT-22/2016.",
+      "evidencia_memorial": "Memorial não menciona sistema de hidrantes nem traz cálculo de RTI.",
+      "trecho_normativo_resumido": "IT-22/2016 Tabela 3 define Tipo de sistema e RTI mínima conforme área construída e classificação/carga de incêndio (MJ/m²).",
+      "observacao": "Sistema obrigatório ausente. Tipo e RTI exatos dependem da carga de incêndio calculada no memorial — ver checklist normativo.",
+      "recomendacao": "Incluir rede de hidrantes/mangotinhos, RTI, bomba e abrigos conforme Tabela 3 da IT-22/2016.",
       "severidade": "critica"
     }
   ],

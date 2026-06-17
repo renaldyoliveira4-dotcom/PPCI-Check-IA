@@ -17,7 +17,7 @@ import { SYSTEM_PROMPT_PPCI } from "./prompts";
 // Modelo recomendado para análise de plantas
 export const MODEL_DEFAULT = "claude-sonnet-4-5-20250929";
 
-const MAX_TOKENS = 6000;
+const MAX_TOKENS = 8192;
 const PDF_MAX_BYTES = 32 * 1024 * 1024; // 32 MB
 const IMG_MAX_BYTES = 20 * 1024 * 1024; // 20 MB
 
@@ -61,6 +61,8 @@ export interface SugestaoEnquadramento {
   area_total_construida?: string;
   justificativa: string;
   its_aplicaveis?: string[];
+  /** Carga de incêndio (MJ/m²) extraída do cálculo presente no memorial descritivo, se houver */
+  carga_incendio_mjm2?: number;
 }
 
 export interface Encontrado {
@@ -252,7 +254,78 @@ export function extrairJson(texto: string): AnalysisResult | null {
     if (parsed5) return parsed5;
   }
 
+  // ── Estratégia 5: JSON truncado (max_tokens cortou no meio) ──────────
+  // Tenta fechar artificialmente o JSON contando chaves/colchetes abertos
+  // e recupera ao menos os campos que vieram completos antes do corte.
+  if (start3 !== -1) {
+    const recuperado = tentarRecuperarTruncado(limpo, start3);
+    if (recuperado) return recuperado;
+  }
+
   return null;
+}
+
+/**
+ * Tenta recuperar um JSON truncado por limite de tokens.
+ * Estratégia: remove a última propriedade incompleta (que não tem fechamento
+ * de string/valor válido) e fecha artificialmente as chaves/colchetes abertos.
+ */
+function tentarRecuperarTruncado(texto: string, startIdx: number): AnalysisResult | null {
+  let trecho = texto.slice(startIdx);
+
+  // Remove possível propriedade cortada no meio (sem vírgula final nem fechamento)
+  // Ex: ..."observacao": "Verificar dist  ← corta aqui sem fechar a string
+  // Estratégia: corta no último "," em nível seguro e tenta fechar a partir daí
+  const candidatos: string[] = [];
+
+  // Tenta cortar progressivamente a partir da última vírgula encontrada,
+  // de trás para frente, até achar um ponto onde o JSON fecha válido
+  let lastComma = trecho.length;
+  for (let tentativas = 0; tentativas < 25; tentativas++) {
+    lastComma = trecho.lastIndexOf(",", lastComma - 1);
+    if (lastComma === -1) break;
+
+    const parcial = trecho.slice(0, lastComma);
+    const fechado = fecharChavesAbertas(parcial);
+    candidatos.push(fechado);
+  }
+
+  for (const candidato of candidatos) {
+    const parsed = tentarParsear(candidato);
+    if (parsed && (parsed.confianca_geral || parsed.sistemas_auditados || parsed.aprovacao)) {
+      return parsed;
+    }
+  }
+
+  return null;
+}
+
+/** Conta chaves/colchetes abertos (via pilha) e fecha na ordem inversa correta */
+function fecharChavesAbertas(texto: string): string {
+  const pilha: string[] = [];
+  let inString = false;
+  let escape = false;
+
+  for (let i = 0; i < texto.length; i++) {
+    const c = texto[i];
+    if (escape) { escape = false; continue; }
+    if (c === "\\") { escape = true; continue; }
+    if (c === '"') { inString = !inString; continue; }
+    if (inString) continue;
+    if (c === "{") pilha.push("}");
+    else if (c === "[") pilha.push("]");
+    else if (c === "}" || c === "]") pilha.pop();
+  }
+
+  // Se terminou dentro de uma string aberta (corte no meio de um valor),
+  // fecha a string antes de fechar as estruturas
+  let prefixoFechamentoString = "";
+  if (inString) prefixoFechamentoString = '"';
+
+  // Fecha na ordem inversa de abertura (último aberto, primeiro fechado)
+  const fechamento = pilha.reverse().join("");
+
+  return texto + prefixoFechamentoString + fechamento;
 }
 
 /** Extrai substring de texto a partir de `startIdx` usando balanceamento de chaves */
