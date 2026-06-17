@@ -9,6 +9,8 @@ import {
   type ChecklistNormativoItem,
 } from "@/lib/analysis/checklist";
 import { regra_hidrantes } from "@/lib/analysis/normas/cbmba/rules/sistemas";
+import { classifyOccupancy } from "@/lib/classification/classifyOccupancy";
+import { validatePTS } from "@/lib/classification/validatePTS";
 import {
   buscarTrechosPorChecklist,
   montarContextoNormativo,
@@ -145,17 +147,46 @@ export async function POST(req: Request) {
   // 9. Mapear resultado
   const sistemas = result.sistemas_auditados ?? [];
 
+  // 9a. Reclassificar ocupação/divisão com base no texto real do projeto
+  // (descrição cadastrada + dados extraídos pela IA do memorial/planta),
+  // usando a base normativa estruturada — nunca aceitando uma divisão
+  // "inventada" fora da Tabela 1 do Decreto 16.302/2015.
+  const cargaIncendioExtraida = result.sugestao_enquadramento?.carga_incendio_mjm2;
+
+  const textoParaClassificacao = [
+    project.name ?? "",
+    project.client_name ?? "",
+    project.occupancy_type ?? "",
+    result.sugestao_enquadramento?.descricao ?? "",
+    result.sugestao_enquadramento?.divisao ?? "",
+  ].join(" ");
+
+  const classificacaoOcupacao = classifyOccupancy({
+    projectText: textoParaClassificacao,
+    declaredUse: project.occupancy_type ?? undefined,
+    areaM2: project.built_area ?? undefined,
+    floors: project.floors ?? undefined,
+    fireLoadMJm2: cargaIncendioExtraida,
+  });
+
+  // Usa a divisão reclassificada quando a confiança é razoável; caso
+  // contrário, mantém o que o usuário cadastrou e sinaliza para revisão.
+  const divisaoFinalClassificacao =
+    classificacaoOcupacao.confidence >= 0.5 && classificacaoOcupacao.division !== "NÃO ENQUADRADO AUTOMATICAMENTE – EXIGE ANÁLISE TÉCNICA"
+      ? classificacaoOcupacao.division
+      : divisao;
+  const grupoFinalClassificacao = divisaoFinalClassificacao.split("-")[0] ?? grupo;
+
   // 9b. Recalcular item de hidrantes (IT-22) com a carga de incêndio real
   // extraída do memorial pela IA, em vez do valor genérico usado na geração
   // inicial do checklist (que ocorreu antes da IA ler o memorial).
-  const cargaIncendioExtraida = result.sugestao_enquadramento?.carga_incendio_mjm2;
   let checklistFinal: ChecklistNormativoItem[] = checklist;
   if (cargaIncendioExtraida !== undefined) {
     const itemHidranteAtualizado = regra_hidrantes({
       area_construida: project.built_area ?? 0,
       altura: (project.floors ?? 1) * 3,
-      grupo,
-      divisao,
+      grupo: grupoFinalClassificacao,
+      divisao: divisaoFinalClassificacao,
       risco: "MODERADO",
       floors: project.floors ?? 1,
       analysis_mode,
@@ -167,6 +198,15 @@ export async function POST(req: Request) {
       );
     }
   }
+
+  // 9c. Validar elegibilidade ao PTS com os critérios reais da IT-42/2024
+  // (área ≤ 750 m² e NO MÁXIMO 3 PAVIMENTOS — nunca um limite de altura em metros).
+  const validacaoPTS = validatePTS({
+    areaM2: project.built_area ?? 0,
+    floors: project.floors ?? 1,
+    grupo: grupoFinalClassificacao,
+    divisao: divisaoFinalClassificacao,
+  });
 
   const mapStatus = (s: SistemaAuditado["situacao"]): ItemStatus =>
     s === "conforme" ? "conforme" : s === "nao_conforme" ? "nao_conforme" : "atencao";
@@ -201,10 +241,10 @@ export async function POST(req: Request) {
       nota: notaIA ?? null,
       status_aprovacao: result.aprovacao?.status ?? null,
       confianca_geral: result.confianca_geral ?? null,
-      grupo_ocupacao: result.sugestao_enquadramento?.grupo ?? null,
-      divisao_ocupacao: result.sugestao_enquadramento?.divisao ?? null,
-      risco_nivel: result.sugestao_enquadramento?.risco ?? null,
-      tipo_processo: result.sugestao_enquadramento?.processo ?? null,
+      grupo_ocupacao: grupoFinalClassificacao,
+      divisao_ocupacao: divisaoFinalClassificacao,
+      risco_nivel: classificacaoOcupacao.fireRisk !== "Não informado" ? classificacaoOcupacao.fireRisk : (result.sugestao_enquadramento?.risco ?? null),
+      tipo_processo: validacaoPTS.tipo,
       area_total_detectada: result.sugestao_enquadramento?.area_total_construida ?? null,
       numero_pavimentos_detectado: result.sugestao_enquadramento?.numero_pavimentos ?? null,
       enquadramento_correto: result.sugestao_enquadramento?.enquadramento_correto ?? null,
@@ -214,6 +254,24 @@ export async function POST(req: Request) {
       ai_meta: result._meta ?? null,
       checklist_normativo: checklistFinal,
       analysis_mode,
+      classificacao_ocupacao: {
+        occupancy_use: classificacaoOcupacao.occupancyUse,
+        division: classificacaoOcupacao.division,
+        description: classificacaoOcupacao.description,
+        fire_load_mjm2: classificacaoOcupacao.fireLoadMJm2,
+        fire_risk: classificacaoOcupacao.fireRisk,
+        confidence: classificacaoOcupacao.confidence,
+        reasoning: classificacaoOcupacao.reasoning,
+        warnings: classificacaoOcupacao.warnings,
+        alternatives: classificacaoOcupacao.alternatives,
+        required_human_review: classificacaoOcupacao.requiredHumanReview,
+      },
+      validacao_pts: {
+        eligible: validacaoPTS.eligible,
+        tipo: validacaoPTS.tipo,
+        failed_requirements: validacaoPTS.failedRequirements,
+        norma_referencia: validacaoPTS.normaReferencia,
+      },
     })
     .select()
     .single();
