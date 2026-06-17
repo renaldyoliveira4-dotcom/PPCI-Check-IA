@@ -6,7 +6,9 @@ import {
   formatarChecklistParaPrompt,
   formatarDadosProjeto,
   type ModoAnalise,
+  type ChecklistNormativoItem,
 } from "@/lib/analysis/checklist";
+import { regra_hidrantes } from "@/lib/analysis/normas/cbmba/rules/sistemas";
 import {
   buscarTrechosPorChecklist,
   montarContextoNormativo,
@@ -142,6 +144,30 @@ export async function POST(req: Request) {
 
   // 9. Mapear resultado
   const sistemas = result.sistemas_auditados ?? [];
+
+  // 9b. Recalcular item de hidrantes (IT-22) com a carga de incêndio real
+  // extraída do memorial pela IA, em vez do valor genérico usado na geração
+  // inicial do checklist (que ocorreu antes da IA ler o memorial).
+  const cargaIncendioExtraida = result.sugestao_enquadramento?.carga_incendio_mjm2;
+  let checklistFinal: ChecklistNormativoItem[] = checklist;
+  if (cargaIncendioExtraida !== undefined) {
+    const itemHidranteAtualizado = regra_hidrantes({
+      area_construida: project.built_area ?? 0,
+      altura: (project.floors ?? 1) * 3,
+      grupo,
+      divisao,
+      risco: "MODERADO",
+      floors: project.floors ?? 1,
+      analysis_mode,
+      carga_incendio: cargaIncendioExtraida,
+    });
+    if (itemHidranteAtualizado) {
+      checklistFinal = checklist.map((it) =>
+        it.id === "IT22-hidrantes" ? itemHidranteAtualizado : it
+      );
+    }
+  }
+
   const mapStatus = (s: SistemaAuditado["situacao"]): ItemStatus =>
     s === "conforme" ? "conforme" : s === "nao_conforme" ? "nao_conforme" : "atencao";
   const riskFromSituacao = (s: SistemaAuditado): RiskLevel => {
@@ -186,7 +212,7 @@ export async function POST(req: Request) {
       pendencias: result.pendencias ?? [],
       encontrados: result.encontrados ?? [],
       ai_meta: result._meta ?? null,
-      checklist_normativo: checklist,
+      checklist_normativo: checklistFinal,
       analysis_mode,
     })
     .select()
