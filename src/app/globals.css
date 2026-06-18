@@ -84,8 +84,10 @@ body {
 }
 .pulse-dot { animation: pulse-dot 1.5s ease-in-out infinite; }
 
-/* ── Utilitários ── */
-@layer utilities {
+/* ── Tabela de projetos — hover compatível com dark/light ── */
+.proj-table tr:hover td {
+  background-color: var(--bg-elevated);
+}
   .text-balance { text-wrap: balance; }
   .text-pretty  { text-wrap: pretty; }
 }

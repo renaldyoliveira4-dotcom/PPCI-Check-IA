@@ -183,7 +183,7 @@ export default async function DashboardPage() {
 
         {recentProjects && recentProjects.length > 0 ? (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="proj-table w-full text-sm">
               <thead>
                 <tr style={{ borderBottom: "1px solid var(--border-subtle)" }}>
                   {["Projeto", "Ocupação", "Área", "Criado em", "Status", ""].map((h) => (
@@ -203,10 +203,8 @@ export default async function DashboardPage() {
                   return (
                     <tr
                       key={p.id}
-                      className="transition-colors"
+                      className="transition-colors hover:bg-white/5 dark:hover:bg-white/5"
                       style={{ borderBottom: "1px solid var(--border-subtle)" }}
-                      onMouseEnter={(e) => (e.currentTarget.style.background = "var(--bg-elevated)")}
-                      onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
                     >
                       <td className="px-5 py-3.5">
                         <p className="font-semibold" style={{ color: "var(--text-primary)" }}>{p.name}</p>
