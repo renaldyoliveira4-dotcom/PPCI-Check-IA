@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/Button";
 import { Badge, StatusBadge, RiskBadge } from "@/components/ui/Badge";
 import { ScoreCircle } from "@/components/ui/ProgressBar";
 import { formatDateTime, projectStatusLabel } from "@/lib/utils";
+import { DownloadRelatorio } from "@/components/relatorio/DownloadRelatorio";
 import type { AnalysisItem, ItemStatus } from "@/types";
 
 export default async function RelatorioPage({
@@ -161,13 +162,11 @@ export default async function RelatorioPage({
           </p>
         </div>
 
-        <Button variant="outline" disabled title="Em breve">
-          <Download className="h-4 w-4" />
-          Exportar PDF
-        </Button>
+        <DownloadRelatorio projetoNome={project.name} />
       </div>
 
       {/* Painel principal: nota + status + sumário */}
+      <div id="relatorio-content">
       <Card className="mb-8 overflow-hidden">
         <div className="grid lg:grid-cols-[280px_1fr]">
           {/* Lado esquerdo: nota técnica */}
@@ -482,6 +481,8 @@ export default async function RelatorioPage({
           </div>
         </div>
       </div>
+
+      </div>{/* fim #relatorio-content */}
 
       <div className="mt-8 flex flex-wrap gap-3">
         <Link href={`/projetos/${project.id}`}>

@@ -13,6 +13,7 @@ import {
   ClipboardCheck,
   Calendar,
   ArrowRight,
+  Pencil,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { AppShell } from "@/components/layout/AppShell";
@@ -102,6 +103,12 @@ export default async function ProjectDetailsPage({
         </div>
 
         <div className="flex flex-wrap gap-2">
+          <Link href={`/projetos/${project.id}/editar`}>
+            <Button variant="outline">
+              <Pencil className="h-4 w-4" />
+              Editar
+            </Button>
+          </Link>
           {project.status === "draft" && (
             <Link href={`/projetos/${project.id}/upload`}>
               <Button>
