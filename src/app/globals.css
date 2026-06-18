@@ -2,32 +2,81 @@
 @tailwind components;
 @tailwind utilities;
 
-/* DM Sans como fonte principal — igual ao PPCI PRO */
+/* ── Fontes ── */
 :root {
   --font-body: var(--font-dm-sans), var(--font-inter), system-ui, sans-serif;
   --font-display: var(--font-space-grotesk), var(--font-dm-sans), system-ui, sans-serif;
 }
 
-body {
-  font-family: var(--font-body);
-  background-color: #F8FAFC;
-  color: #1E293B;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+/* ── Tema escuro (padrão) ── */
+:root,
+.dark {
+  --bg-base:        #0d1117;
+  --bg-surface:     #111827;
+  --bg-elevated:    #161f2e;
+  --bg-sidebar:     #0a0f1a;
+  --border-subtle:  rgba(255,255,255,0.06);
+  --border-default: rgba(255,255,255,0.10);
+  --text-primary:   #f0f4f8;
+  --text-secondary: #6b7280;
+  --text-muted:     #374151;
+  --accent:         #ef4444;
+  --accent-hover:   #dc2626;
+  --accent-glow:    rgba(239,68,68,0.20);
+  --accent-subtle:  rgba(239,68,68,0.10);
+  --status-ok:      #22c55e;
+  --status-ok-bg:   rgba(34,197,94,0.10);
+  --status-warn:    #f59e0b;
+  --status-warn-bg: rgba(245,158,11,0.10);
+  --status-bad:     #ef4444;
+  --status-bad-bg:  rgba(239,68,68,0.10);
 }
 
-/* Scrollbar customizada igual ao PRO */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 99px; }
-::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+/* ── Tema claro ── */
+.light {
+  --bg-base:        #f8fafc;
+  --bg-surface:     #ffffff;
+  --bg-elevated:    #f1f5f9;
+  --bg-sidebar:     #0a0f1a;
+  --border-subtle:  rgba(0,0,0,0.06);
+  --border-default: rgba(0,0,0,0.10);
+  --text-primary:   #0f172a;
+  --text-secondary: #64748b;
+  --text-muted:     #94a3b8;
+  --accent:         #ef4444;
+  --accent-hover:   #dc2626;
+  --accent-glow:    rgba(239,68,68,0.15);
+  --accent-subtle:  rgba(239,68,68,0.08);
+  --status-ok:      #16a34a;
+  --status-ok-bg:   #f0fdf4;
+  --status-warn:    #d97706;
+  --status-warn-bg: #fffbeb;
+  --status-bad:     #dc2626;
+  --status-bad-bg:  #fef2f2;
+}
 
-/* Animações */
+/* ── Body ── */
+body {
+  font-family: var(--font-body);
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(239,68,68,0.25); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(239,68,68,0.45); }
+
+/* ── Animações ── */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-.fade-in { animation: fadeIn .4s ease-out forwards; }
+.fade-in { animation: fadeIn .35s ease-out forwards; }
 
 @keyframes pulse-dot {
   0%, 100% { opacity: 1; }
@@ -35,7 +84,7 @@ body {
 }
 .pulse-dot { animation: pulse-dot 1.5s ease-in-out infinite; }
 
-/* Utilitários */
+/* ── Utilitários ── */
 @layer utilities {
   .text-balance { text-wrap: balance; }
   .text-pretty  { text-wrap: pretty; }
