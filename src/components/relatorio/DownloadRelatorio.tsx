@@ -330,7 +330,7 @@ function gerarHtmlImpressao(d: DadosRelatorio): string {
   window.onload = function() {
     window.print();
   };
-<\/script>
+${"<"}/script>
 </body>
 </html>`;
 }
