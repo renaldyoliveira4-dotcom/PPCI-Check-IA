@@ -88,6 +88,9 @@ body {
 .proj-table tr:hover td {
   background-color: var(--bg-elevated);
 }
+
+/* ── Utilitários ── */
+@layer utilities {
   .text-balance { text-wrap: balance; }
   .text-pretty  { text-wrap: pretty; }
 }
