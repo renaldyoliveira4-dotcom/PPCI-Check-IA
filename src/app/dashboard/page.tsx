@@ -1,28 +1,29 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import {
-  Plus, ArrowRight, Coins, FolderKanban,
-  ClipboardCheck, TrendingUp, Zap, Flame,
-  ShieldCheck, AlertTriangle, Building,
+  Plus, ArrowRight, FileText, Coins, Sparkles, TrendingUp, FolderKanban,
+  ClipboardCheck, AlertCircle, Zap,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getUserContext } from "@/lib/user-context";
 import { AppShell } from "@/components/layout/AppShell";
+import { Card, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
 import { formatDate } from "@/lib/utils";
+
+const STATUS_GESTAO: Record<string, { label: string; cls: string }> = {
+  draft:      { label: "Rascunho",    cls: "bg-slate-100 text-slate-600" },
+  uploaded:   { label: "Aguardando",  cls: "bg-amber-100 text-amber-700" },
+  analyzing:  { label: "Analisando",  cls: "bg-sky-100 text-sky-700" },
+  completed:  { label: "Concluído",   cls: "bg-emerald-100 text-emerald-700" },
+  archived:   { label: "Arquivado",   cls: "bg-slate-100 text-slate-500" },
+};
 
 function fmtArea(n?: number | null) {
   if (!n) return "—";
   return n.toLocaleString("pt-BR") + " m²";
 }
-
-const STATUS_CONFIG: Record<string, { label: string; dot: string; bg: string; text: string }> = {
-  draft:     { label: "Rascunho",   dot: "#6b7280", bg: "rgba(107,114,128,0.12)", text: "#9ca3af" },
-  uploaded:  { label: "Aguardando", dot: "#f59e0b", bg: "rgba(245,158,11,0.12)",  text: "#fbbf24" },
-  analyzing: { label: "Analisando", dot: "#3b82f6", bg: "rgba(59,130,246,0.12)",  text: "#60a5fa" },
-  completed: { label: "Concluído",  dot: "#22c55e", bg: "rgba(34,197,94,0.12)",   text: "#4ade80" },
-  archived:  { label: "Arquivado",  dot: "#475569", bg: "rgba(71,85,105,0.12)",   text: "#64748b" },
-};
 
 export default async function DashboardPage() {
   const { user, profile } = await getUserContext();
@@ -36,6 +37,9 @@ export default async function DashboardPage() {
   const { count: totalAnalyses } = await supabase
     .from("analyses").select("*, projects!inner(user_id)", { count: "exact", head: true }).eq("projects.user_id", user.id);
 
+  const { data: projectsWithIssues } = await supabase
+    .from("projects").select("id").eq("user_id", user.id).in("status", ["uploaded", "analyzing"]);
+
   const { data: recentProjects } = await supabase
     .from("projects")
     .select("id, name, client_name, status, created_at, occupancy_type, built_area")
@@ -45,7 +49,7 @@ export default async function DashboardPage() {
 
   const { data: lastAnalyses } = await supabase
     .from("analyses")
-    .select("nota, projects!inner(user_id)")
+    .select("nota, score, projects!inner(user_id)")
     .eq("projects.user_id", user.id)
     .order("created_at", { ascending: false })
     .limit(10);
@@ -54,13 +58,12 @@ export default async function DashboardPage() {
   const notaMedia = notas.length > 0 ? notas.reduce((a, b) => a + b, 0) / notas.length : null;
   const tokens = profile?.tokens ?? 0;
   const tokensUsed = profile?.tokens_used ?? 0;
-  const primeiroNome = profile?.name?.split(" ")[0] || "projetista";
 
   const stats = [
-    { label: "Tokens disponíveis", value: String(tokens), icon: Coins,          accent: "#ef4444", href: "/tokens" },
-    { label: "Total de projetos",  value: String(totalProjects ?? 0), icon: Building,       accent: "#3b82f6", href: "/historico" },
-    { label: "Análises feitas",    value: String(totalAnalyses ?? 0), icon: ClipboardCheck, accent: "#22c55e" },
-    { label: "Nota média (IA)",    value: notaMedia !== null ? notaMedia.toFixed(1) : "—", icon: TrendingUp, accent: "#a855f7" },
+    { label: "Saldo de tokens", value: String(tokens), icon: Coins, color: "from-orange-500 to-red-500", href: "/tokens" },
+    { label: "Total de projetos", value: String(totalProjects ?? 0), icon: FolderKanban, color: "from-blue-500 to-indigo-500", href: "/historico" },
+    { label: "Análises realizadas", value: String(totalAnalyses ?? 0), icon: ClipboardCheck, color: "from-emerald-500 to-teal-500" },
+    { label: "Nota média (IA)", value: notaMedia !== null ? notaMedia.toFixed(1) : "—", icon: TrendingUp, color: "from-violet-500 to-purple-500" },
   ];
 
   return (
@@ -71,18 +74,14 @@ export default async function DashboardPage() {
       activeState={profile?.active_state ?? "BA"}
       isAdmin={profile?.is_admin ?? false}
     >
-
-      {/* ── Cabeçalho ── */}
+      {/* Cabeçalho */}
       <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <Flame className="h-5 w-5 text-red-500" />
-            <h1 className="text-xl font-semibold" style={{ color: "var(--text-primary)" }}>
-              Olá, {primeiroNome}
-            </h1>
-          </div>
-          <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
-            Visão geral dos seus projetos PPCI · Conformidade CBMBA/BA
+          <h1 className="text-2xl font-bold text-slate-800">
+            Olá, {profile?.name?.split(" ")[0] || "projetista"} 👋
+          </h1>
+          <p className="mt-1 text-sm text-slate-500">
+            Visão geral e gestão dos seus projetos PPCI
           </p>
         </div>
         <Link href="/projetos/novo">
@@ -93,147 +92,107 @@ export default async function DashboardPage() {
         </Link>
       </div>
 
-      {/* ── Alerta de tokens zerados ── */}
+      {/* Tokens zerados */}
       {!profile?.is_admin && tokens === 0 && tokensUsed > 0 && (
-        <div
-          className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-xl px-5 py-4"
-          style={{
-            background: "rgba(239,68,68,0.08)",
-            border: "1px solid rgba(239,68,68,0.2)",
-          }}
-        >
-          <div className="flex items-start gap-3">
-            <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-red-600">
-              <Zap className="h-4 w-4 text-white" />
+        <Card className="mb-6 border-orange-200 bg-orange-50/60">
+          <CardContent className="py-4">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="flex items-start gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-orange-500 to-red-500 text-white">
+                  <Zap className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="font-semibold text-slate-800">Seus tokens acabaram</p>
+                  <p className="text-sm text-slate-600">Adquira mais para continuar analisando projetos.</p>
+                </div>
+              </div>
+              <Link href="/tokens"><Button size="sm"><Coins className="h-3.5 w-3.5" />Ver pacote</Button></Link>
             </div>
-            <div>
-              <p className="font-semibold" style={{ color: "var(--text-primary)" }}>Tokens esgotados</p>
-              <p className="text-sm" style={{ color: "var(--text-secondary)" }}>Adquira mais tokens para continuar analisando projetos.</p>
-            </div>
-          </div>
-          <Link href="/tokens">
-            <Button size="sm">
-              <Coins className="h-3.5 w-3.5" />
-              Ver pacotes
-            </Button>
-          </Link>
-        </div>
+          </CardContent>
+        </Card>
       )}
 
-      {/* ── Stats ── */}
+      {/* Stats */}
       <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((s) => {
           const Icon = s.icon;
-          const card = (
-            <div
-              key={s.label}
-              className="rounded-xl px-5 py-4 transition-all"
-              style={{
-                background: "var(--bg-surface)",
-                border: "1px solid var(--border-subtle)",
-              }}
-            >
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>
-                    {s.label}
-                  </p>
-                  <p className="mt-2 text-3xl font-bold" style={{ color: "var(--text-primary)" }}>
-                    {s.value}
-                  </p>
+          const inner = (
+            <Card className={s.href ? "hover:shadow-md transition-shadow" : ""}>
+              <CardContent className="py-5">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">{s.label}</p>
+                    <p className="mt-2 text-3xl font-bold text-slate-800">{s.value}</p>
+                  </div>
+                  <div className={`flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br text-white shadow-sm ${s.color}`}>
+                    <Icon className="h-5 w-5" />
+                  </div>
                 </div>
-                <div
-                  className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl"
-                  style={{ background: `${s.accent}20` }}
-                >
-                  <Icon className="h-5 w-5" style={{ color: s.accent }} />
-                </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           );
-          return s.href
-            ? <Link key={s.label} href={s.href}>{card}</Link>
-            : <div key={s.label}>{card}</div>;
+          return s.href ? <Link key={s.label} href={s.href}>{inner}</Link> : <div key={s.label}>{inner}</div>;
         })}
       </div>
 
-      {/* ── Projetos recentes ── */}
-      <div
-        className="rounded-xl overflow-hidden"
-        style={{ background: "var(--bg-surface)", border: "1px solid var(--border-subtle)" }}
-      >
-        {/* Header */}
-        <div
-          className="flex items-center justify-between px-6 py-4"
-          style={{ borderBottom: "1px solid var(--border-subtle)" }}
-        >
+      {/* Tabela de projetos recentes */}
+      <Card>
+        <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
           <div>
-            <h2 className="font-semibold" style={{ color: "var(--text-primary)" }}>Projetos recentes</h2>
-            <p className="text-xs mt-0.5" style={{ color: "var(--text-secondary)" }}>
-              {recentProjects?.length ?? 0} projeto(s) cadastrado(s)
+            <h2 className="text-lg font-bold text-slate-800">Projetos recentes</h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Os {recentProjects?.length ?? 0} projetos mais recentes
             </p>
           </div>
-          <Link
-            href="/historico"
-            className="flex items-center gap-1 text-sm font-semibold text-red-500 hover:text-red-400 transition-colors"
-          >
+          <Link href="/historico" className="flex items-center gap-1 text-sm font-semibold text-orange-600 hover:text-orange-700">
             Ver todos <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>
 
         {recentProjects && recentProjects.length > 0 ? (
           <div className="overflow-x-auto">
-            <table className="proj-table w-full text-sm">
+            <table className="w-full text-sm">
               <thead>
-                <tr style={{ borderBottom: "1px solid var(--border-subtle)" }}>
-                  {["Projeto", "Ocupação", "Área", "Criado em", "Status", ""].map((h) => (
-                    <th
-                      key={h}
-                      className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-wider"
-                      style={{ color: "var(--text-secondary)" }}
-                    >
+                <tr className="border-b border-slate-200">
+                  {["Cliente / Projeto", "Ocupação", "Área", "Criado em", "Status", ""].map((h) => (
+                    <th key={h} className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
                       {h}
                     </th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {recentProjects.map((p) => {
-                  const sc = STATUS_CONFIG[p.status] ?? STATUS_CONFIG.draft;
+                {recentProjects.map((p, i) => {
+                  const sc = STATUS_GESTAO[p.status] ?? STATUS_GESTAO.draft;
                   return (
                     <tr
                       key={p.id}
-                      className="transition-colors hover:bg-white/5 dark:hover:bg-white/5"
-                      style={{ borderBottom: "1px solid var(--border-subtle)" }}
+                      className={`border-b border-slate-100 hover:bg-slate-50/60 transition-colors ${i % 2 === 1 ? "bg-slate-50/30" : ""}`}
                     >
                       <td className="px-5 py-3.5">
-                        <p className="font-semibold" style={{ color: "var(--text-primary)" }}>{p.name}</p>
+                        <p className="font-semibold text-slate-800">{p.name}</p>
                         {p.client_name && (
-                          <p className="text-xs" style={{ color: "var(--text-secondary)" }}>{p.client_name}</p>
+                          <p className="text-xs text-slate-500">{p.client_name}</p>
                         )}
                       </td>
-                      <td className="px-5 py-3.5" style={{ color: "var(--text-secondary)" }}>
+                      <td className="px-5 py-3.5 text-slate-600">
                         {p.occupancy_type || "—"}
                       </td>
-                      <td className="px-5 py-3.5" style={{ color: "var(--text-secondary)" }}>
+                      <td className="px-5 py-3.5 text-slate-600">
                         {fmtArea(p.built_area)}
                       </td>
-                      <td className="px-5 py-3.5" style={{ color: "var(--text-secondary)" }}>
+                      <td className="px-5 py-3.5 text-slate-600">
                         {formatDate(p.created_at)}
                       </td>
                       <td className="px-5 py-3.5">
-                        <span
-                          className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-semibold"
-                          style={{ background: sc.bg, color: sc.text }}
-                        >
-                          <span className="h-1.5 w-1.5 rounded-full flex-shrink-0" style={{ background: sc.dot }} />
+                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${sc.cls}`}>
                           {sc.label}
                         </span>
                       </td>
                       <td className="px-5 py-3.5">
                         <Link
                           href={`/projetos/${p.id}`}
-                          className="inline-flex items-center gap-1 text-xs font-semibold text-red-500 hover:text-red-400 transition-colors"
+                          className="inline-flex items-center gap-1 text-xs font-semibold text-orange-600 hover:text-orange-700"
                         >
                           Abrir <ArrowRight className="h-3 w-3" />
                         </Link>
@@ -245,47 +204,20 @@ export default async function DashboardPage() {
             </table>
           </div>
         ) : (
-          <div className="py-16 text-center">
-            <div
-              className="mx-auto flex h-14 w-14 items-center justify-center rounded-full"
-              style={{ background: "var(--bg-elevated)" }}
-            >
-              <FolderKanban className="h-7 w-7" style={{ color: "var(--text-secondary)" }} />
+          <CardContent>
+            <div className="py-14 text-center">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-slate-100">
+                <FolderKanban className="h-7 w-7 text-slate-400" />
+              </div>
+              <p className="mt-4 font-semibold text-slate-800">Você ainda não tem projetos</p>
+              <p className="mt-1 text-sm text-slate-500">Crie seu primeiro projeto e analise em minutos.</p>
+              <Link href="/projetos/novo" className="mt-6 inline-block">
+                <Button><Plus className="h-4 w-4" />Criar projeto</Button>
+              </Link>
             </div>
-            <p className="mt-4 font-semibold" style={{ color: "var(--text-primary)" }}>
-              Você ainda não tem projetos
-            </p>
-            <p className="mt-1 text-sm" style={{ color: "var(--text-secondary)" }}>
-              Crie o seu primeiro e analise em minutos.
-            </p>
-            <Link href="/projetos/novo" className="mt-6 inline-block">
-              <Button>
-                <Plus className="h-4 w-4" />
-                Criar projeto
-              </Button>
-            </Link>
-          </div>
+          </CardContent>
         )}
-      </div>
-
-      {/* ── Rodapé de conformidade normativa ── */}
-      <div
-        className="mt-6 flex items-center gap-3 rounded-xl px-5 py-3.5"
-        style={{
-          background: "rgba(239,68,68,0.05)",
-          border: "1px solid rgba(239,68,68,0.12)",
-        }}
-      >
-        <ShieldCheck className="h-4 w-4 flex-shrink-0 text-red-500" />
-        <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
-          Base normativa ativa:{" "}
-          <span className="font-semibold text-red-400">
-            Decreto 16.302/2015 + IT-42/2024 CBMBA/BA
-          </span>
-          {" "}— Motor de análise atualizado com todas as tabelas de exigências.
-        </p>
-      </div>
-
+      </Card>
     </AppShell>
   );
 }
