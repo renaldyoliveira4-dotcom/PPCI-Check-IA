@@ -162,7 +162,44 @@ export default async function RelatorioPage({
           </p>
         </div>
 
-        <DownloadRelatorio projetoNome={project.name} />
+        <DownloadRelatorio dados={{
+          projetoNome: project.name,
+          clienteNome: project.client_name ?? undefined,
+          cidade: project.city ?? undefined,
+          estado: project.state ?? undefined,
+          areaM2: project.built_area ?? undefined,
+          pavimentos: project.floors ?? undefined,
+          ocupacao: project.occupancy_type ?? undefined,
+          analiseData: analysis.created_at,
+          nota: analysis.nota ?? undefined,
+          statusAprovacao: analysis.status_aprovacao ?? undefined,
+          score: analysis.score ?? 0,
+          conformes: analysis.conforming_items ?? 0,
+          atencao: analysis.warning_items ?? 0,
+          naoConformes: analysis.non_conforming_items ?? 0,
+          sistemas: typedItems.filter(i => i.item_type === "sistema").map(i => ({
+            sistema: i.category ?? "",
+            norma: i.normative_reference ?? undefined,
+            status: i.status as "conforme" | "nao_conforme" | "atencao",
+            item_type: i.item_type,
+            description: i.description ?? "",
+            normative_reference: i.normative_reference ?? undefined,
+            recommendation: i.recommendation ?? undefined,
+          })),
+          divergencias: typedItems.filter(i => i.item_type === "divergencia").map(i => ({
+            sistema: "",
+            status: i.status as "conforme" | "nao_conforme" | "atencao",
+            item_type: i.item_type,
+            description: i.description ?? "",
+          })),
+          pendencias: typedItems.filter(i => i.item_type === "pendencia").map(i => ({
+            sistema: "",
+            status: i.status as "conforme" | "nao_conforme" | "atencao",
+            item_type: i.item_type,
+            description: i.description ?? "",
+          })),
+          aiModel: analysis.ai_meta?.model ?? undefined,
+        }} />
       </div>
 
       {/* Painel principal: nota + status + sumário */}
