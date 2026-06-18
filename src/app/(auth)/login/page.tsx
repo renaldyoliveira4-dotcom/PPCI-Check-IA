@@ -2,13 +2,37 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={<LoginFormFallback />}>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginFormFallback() {
+  return (
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle>Entrar na sua conta</CardTitle>
+        <p className="mt-1 text-sm text-navy-500">
+          Acesse seus projetos e análises.
+        </p>
+      </CardHeader>
+      <CardContent>
+        <div className="h-48 animate-pulse rounded-lg bg-navy-50" />
+      </CardContent>
+    </Card>
+  );
+}
+
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect") || "/dashboard";
@@ -163,3 +187,4 @@ function GoogleIcon({ className }: { className?: string }) {
     </svg>
   );
 }
+
