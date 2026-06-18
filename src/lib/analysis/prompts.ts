@@ -51,11 +51,31 @@ EXTRAÇÃO DE DADOS DA PLANTA:
 - ÁREA TOTAL: use o quadro de áreas PCI, não a área de um pavimento.
 - Retorne campos distintos: "Número de pavimentos" (inteiro), "Área total construída PCI" (m²).
 
-EXTRAÇÃO DA CARGA DE INCÊNDIO (CRÍTICO para IT-22 — hidrantes):
-- Procure no MEMORIAL DESCRITIVO o valor de carga de incêndio calculado, geralmente expresso em MJ/m² (megajoules por metro quadrado), conforme IT-14/CBMBA.
-- Se encontrado, preencha "carga_incendio_mjm2" em "sugestao_enquadramento" com o número exato (sem unidade, ex: 350).
-- Se o memorial NÃO trouxer esse cálculo, NÃO invente um valor — deixe "carga_incendio_mjm2" ausente (omita o campo) e informe isso como pendência no item de hidrantes.
-- NUNCA cite um limiar de área isolado (como "750 m²" ou "300 m²") como critério único de exigência de hidrante. A IT-22/2016 define o Tipo de sistema e a RTI mínima pela Tabela 3, que combina a FAIXA DE ÁREA construída com a CLASSIFICAÇÃO/carga de incêndio (MJ/m²) da edificação — nunca um valor isolado.
+EXTRAÇÃO DA CARGA DE INCÊNDIO (IT-14):
+- Procure no MEMORIAL DESCRITIVO o valor de carga de incêndio calculado conforme IT-14/CBMBA, em MJ/m².
+- Se encontrado E o cálculo estiver correto conforme IT-14 (tabela de cargas específicas por ocupação), preencha "carga_incendio_mjm2" com o número exato e marque como conforme.
+- Se o memorial apresentar um valor de carga de incêndio mas SEM o cálculo detalhado da IT-14 (sem demonstrar a fórmula e os coeficientes por material), marque como pendente e explique.
+- Se o memorial NÃO trouxer esse cálculo, NÃO invente um valor — omita "carga_incendio_mjm2" e sinalize como pendência SOMENTE se a carga de incêndio for necessária para dimensionamento de sistemas JÁ EXIGIDOS pelo checklist.
+
+REGRA ABSOLUTA SOBRE O CHECKLIST NORMATIVO (NUNCA VIOLAR):
+O CHECKLIST NORMATIVO FORNECIDO É A ÚNICA FONTE DE VERDADE sobre quais sistemas são obrigatórios.
+Você DEVE reportar cada sistema EXATAMENTE conforme o campo "exigido" do checklist — NUNCA contradiga o checklist com conhecimento próprio.
+
+- Se "exigido: false" no checklist → o sistema NÃO é obrigatório. Reporte como "não exigido para este enquadramento". NUNCA marque como não conforme. NUNCA diga que a norma exige quando o checklist diz que não exige.
+- Se "exigido: true" no checklist → verifique se está presente na planta/memorial e reporte conformidade.
+- PROIBIDO: usar qualquer IT específica (IT-22, IT-21, etc.) para QUESTIONAR ou CONTRADIZER o que o checklist já decidiu sobre obrigatoriedade.
+- PROIBIDO: escrever "IT-22 não isenta", "Tabela 3 exige", "Anexo E não dispensa" ou qualquer variação que use a IT-22 para criar ou manter obrigatoriedade de hidrante que o checklist não confirmou.
+- PROIBIDO: citar limiar de área (750m², 300m², etc.) como critério de obrigatoriedade de hidrante — isso é papel da Tabela 5/6 do Decreto, já aplicada no checklist.
+- A IT-22 serve APENAS para dimensionamento (Tipo e RTI) DEPOIS que o checklist confirmar exigência — nunca para decidir se é exigido.
+
+REGRA SOBRE SISTEMAS DA TABELA 5 (edificações <=750m² e <=12m de altura):
+Para o enquadramento na Tabela 5 do Decreto 16.302/2015, os sistemas obrigatórios padrão são:
+Saídas de Emergência, Iluminação de Emergência, Sinalização de Emergência, Extintores e Brigada de Incêndio.
+Controle de Materiais de Acabamento: somente para os grupos onde a Tabela 5 marca X (Grupo B, F1/F5, F2/F3/F4/F6/F7/F8, H2/H3/H5, L1 — NÃO para A, D, E, G, C, F9/F10, I, J).
+Hidrantes, Alarme/Detecção, Chuveiros Automáticos e Compartimentação NÃO aparecem na Tabela 5 e portanto NÃO são exigidos nesse enquadramento.
+
+REGRA SOBRE ILUMINAÇÃO DE EMERGÊNCIA:
+A IT-18/CBMBA especifica iluminação de emergência com níveis de 3 lux (em rotas de fuga em uso normal) e 5 lux (em situações específicas). O valor de 30 lux NÃO é parâmetro da IT-18 para iluminação de emergência — não cite 30 lux como referência normativa para este sistema.
 
 CRITÉRIO DA NOTA (0 a 10):
 - Começa em 10.
@@ -78,7 +98,7 @@ FORMATO DE RESPOSTA — OBRIGATÓRIO E CRÍTICO:
 5. Não use comentários dentro do JSON.
 6. ATENÇÃO: se você usar crases ou markdown, a análise falhará e o usuário verá um erro.
 
-Estrutura EXATA do JSON:
+Estrutura EXATA do JSON (os valores abaixo, incluindo "exigido", "situacao" e "carga_incendio_mjm2", são FICTÍCIOS e servem apenas para ilustrar o formato dos campos — sempre substitua pelos valores reais do checklist fornecido, do memorial e da planta; nunca copie estes valores de exemplo):
 
 {
   "confianca_geral": "alta",
@@ -116,15 +136,28 @@ Estrutura EXATA do JSON:
     {
       "sistema": "Hidrantes e mangotinhos",
       "norma": "IT-22",
-      "item_normativo": "IT-22/2016 · Tabela 3",
+      "item_normativo": "Decreto 16.302/2015 · Tabela 5",
+      "exigido": false,
+      "situacao": "conforme",
+      "evidencia_prancha": "Sistema não exigido para este enquadramento — não avaliado nas pranchas.",
+      "evidencia_memorial": "Sistema não exigido para este enquadramento.",
+      "trecho_normativo_resumido": "Tabela 5 do Decreto 16.302/2015: para edificações com área ≤ 750m² e altura ≤ 12m, Hidrantes e Mangotinhos não figuram entre as medidas obrigatórias. IT-22 aplica-se apenas ao dimensionamento quando o sistema for exigido pela matriz normativa.",
+      "observacao": "Hidrantes e mangotinhos não exigidos para este enquadramento (Tabela 5 — área ≤ 750m² e altura ≤ 12m). Nenhuma ação necessária.",
+      "recomendacao": null,
+      "severidade": "none"
+    },
+    {
+      "sistema": "Iluminação de emergência",
+      "norma": "IT-18",
+      "item_normativo": "IT-18/CBMBA",
       "exigido": true,
-      "situacao": "nao_conforme",
-      "evidencia_prancha": "Nenhuma representação de rede de hidrantes, abrigos ou RTI localizada nas pranchas.",
-      "evidencia_memorial": "Memorial não menciona sistema de hidrantes nem traz cálculo de RTI.",
-      "trecho_normativo_resumido": "IT-22/2016 Tabela 3 define Tipo de sistema e RTI mínima conforme área construída e classificação/carga de incêndio (MJ/m²).",
-      "observacao": "Sistema obrigatório ausente. Tipo e RTI exatos dependem da carga de incêndio calculada no memorial — ver checklist normativo.",
-      "recomendacao": "Incluir rede de hidrantes/mangotinhos, RTI, bomba e abrigos conforme Tabela 3 da IT-22/2016.",
-      "severidade": "critica"
+      "situacao": "conforme",
+      "evidencia_prancha": "Luminárias de emergência representadas nas plantas baixas.",
+      "evidencia_memorial": "Memorial descreve sistema de iluminação de emergência com autonomia mínima de 1 hora.",
+      "trecho_normativo_resumido": "IT-18/CBMBA exige iluminação de emergência com mínimo de 3 lux nas rotas de fuga. O valor de 30 lux não é parâmetro desta IT.",
+      "observacao": "Sistema adequadamente representado.",
+      "recomendacao": null,
+      "severidade": "baixa"
     }
   ],
   "divergencias_planta_memorial": [
