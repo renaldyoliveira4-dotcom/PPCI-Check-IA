@@ -27,17 +27,25 @@ export interface ClassifyOccupancyInput {
   heightM?: number;
   floors?: number;
   fireLoadMJm2?: number;
-  hasPublicAssembly?: boolean;
   hasHospitalization?: boolean;
+  hasPublicAssembly?: boolean;
   hasBleachers?: boolean;
   hasFuelSupply?: boolean;
-  hasGLP?: boolean;
-  glpKg?: number;
+  hasVehicleRepair?: boolean;
+  hasRestaurant?: boolean;
+  hasEntertainment?: boolean;
+  hasReligiousUse?: boolean;
+  hasStorage?: boolean;
+  hasIndustrialProcess?: boolean;
   hasFlammableLiquids?: boolean;
   flammableLiquidsLiters?: number;
+  hasGLP?: boolean;
+  glpKg?: number;
   hasSubsoil?: boolean;
   subsoilUse?: string;
 }
+
+export type ClassificationSource = "declared_table" | "inferred_from_text" | "cnae_assisted" | "manual_review";
 
 export interface DivisionAlternative {
   division: string;
@@ -45,13 +53,15 @@ export interface DivisionAlternative {
 }
 
 export interface ClassifyOccupancyResult {
-  occupancyUse: string;
+  group: string;
   division: string;
+  occupancyUse: string;
   description: string;
   examplesMatched: string[];
   fireLoadMJm2: number | null;
   fireRisk: FireRiskLevel;
   confidence: number;
+  source: ClassificationSource;
   reasoning: string[];
   warnings: string[];
   alternatives: DivisionAlternative[];
@@ -67,6 +77,21 @@ function normalize(text: string): string {
     .replace(/[^a-z0-9\s-]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+/**
+ * Verifica se uma keyword normalizada aparece no texto normalizado respeitando
+ * fronteiras de palavra — evita falsos positivos como "aço" (normalizado "aco")
+ * casando dentro de "espaço" (normalizado "espaco"). Permite que a keyword no
+ * singular ainda capture a forma plural mais comum em português (sufixo "s"
+ * ou "es"), por isso a fronteira final aceita um sufixo curto antes do limite
+ * real de palavra.
+ */
+function containsWholeWordOrPhrase(normalizedText: string, normalizedKeyword: string): boolean {
+  if (!normalizedKeyword) return false;
+  const escaped = normalizedKeyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const pattern = new RegExp(`(?<![a-z0-9])${escaped}(e?s)?(?![a-z0-9])`);
+  return pattern.test(normalizedText);
 }
 
 /** Tenta extrair um código de divisão explícito (ex: "D-1", "F-8") do texto */
@@ -93,7 +118,7 @@ function scoreDivisions(normalizedText: string): ScoredDivision[] {
 
     for (const kw of division.keywords) {
       const kwNorm = normalize(kw);
-      if (kwNorm && normalizedText.includes(kwNorm)) {
+      if (kwNorm && containsWholeWordOrPhrase(normalizedText, kwNorm)) {
         score += 1;
         matchedKeywords.push(kw);
       }
@@ -101,7 +126,7 @@ function scoreDivisions(normalizedText: string): ScoredDivision[] {
 
     for (const negKw of division.negativeKeywords) {
       const negNorm = normalize(negKw);
-      if (negNorm && normalizedText.includes(negNorm)) {
+      if (negNorm && containsWholeWordOrPhrase(normalizedText, negNorm)) {
         score -= 2; // negativeKeyword pesa mais que um match positivo simples
         matchedNegative.push(negKw);
       }
@@ -135,7 +160,7 @@ export function classifyOccupancy(input: ClassifyOccupancyInput): ClassifyOccupa
     const div = OCCUPANCY_DIVISIONS.find((d) => d.division === explicitCode)!;
 
     // Verifica conflito: o texto contém negativeKeywords fortes da própria divisão informada?
-    const conflitos = div.negativeKeywords.filter((nk) => normalizedText.includes(normalize(nk)));
+    const conflitos = div.negativeKeywords.filter((nk) => containsWholeWordOrPhrase(normalizedText, normalize(nk)));
 
     if (conflitos.length === 0) {
       reasoning.push(
@@ -147,6 +172,7 @@ export function classifyOccupancy(input: ClassifyOccupancyInput): ClassifyOccupa
       const { fireRisk } = classifyFireRisk(fireLoad);
 
       return {
+        group: div.group,
         occupancyUse: div.occupancyUse,
         division: div.division,
         description: div.description,
@@ -154,6 +180,7 @@ export function classifyOccupancy(input: ClassifyOccupancyInput): ClassifyOccupa
         fireLoadMJm2: fireLoad,
         fireRisk,
         confidence: 0.95,
+        source: "declared_table",
         reasoning,
         warnings,
         alternatives: [],
@@ -174,6 +201,7 @@ export function classifyOccupancy(input: ClassifyOccupancyInput): ClassifyOccupa
 
   if (scored.length === 0) {
     return {
+      group: UNCLASSIFIED,
       occupancyUse: UNCLASSIFIED,
       division: UNCLASSIFIED,
       description: UNCLASSIFIED,
@@ -181,6 +209,7 @@ export function classifyOccupancy(input: ClassifyOccupancyInput): ClassifyOccupa
       fireLoadMJm2: input.fireLoadMJm2 ?? null,
       fireRisk: classifyFireRisk(input.fireLoadMJm2 ?? null).fireRisk,
       confidence: 0,
+      source: "manual_review",
       reasoning: ["Nenhuma palavra-chave da base normativa foi encontrada no texto do projeto."],
       warnings: ["Não foi possível classificar automaticamente — a atividade não corresponde a nenhuma divisão conhecida da Tabela 1 do Decreto 16.302/2015."],
       alternatives: [],
@@ -205,7 +234,7 @@ export function classifyOccupancy(input: ClassifyOccupancyInput): ClassifyOccupa
   let divisaoFinal = best.division;
   const fireLoad = resolveFireLoad(input, best.division, reasoning, warnings);
 
-  if (best.division.requiresFireLoadForDivision) {
+  if (best.division.fireLoadRule === "byMaterial") {
     if (fireLoad === null) {
       warnings.push(
         `A divisão "${best.division.division}" depende da carga de incêndio (MJ/m²) para ser confirmada, ` +
@@ -214,7 +243,7 @@ export function classifyOccupancy(input: ClassifyOccupancyInput): ClassifyOccupa
     } else {
       // Procura, dentro do mesmo grupo, a divisão cuja faixa de carga de incêndio corresponde ao valor real
       const mesmoGrupo = OCCUPANCY_DIVISIONS.filter(
-        (d) => d.group === best.division.group && d.requiresFireLoadForDivision
+        (d) => d.group === best.division.group && d.fireLoadRule === "byMaterial"
       );
       const divisaoPorCarga = mesmoGrupo.find((d) => {
         const range = d.fireLoadRangeMJm2;
@@ -253,12 +282,13 @@ export function classifyOccupancy(input: ClassifyOccupancyInput): ClassifyOccupa
     requiredHumanReview = true;
   }
 
-  if (divisaoFinal.requiresFireLoadForDivision && fireLoad === null) {
+  if (divisaoFinal.fireLoadRule === "byMaterial" && fireLoad === null) {
     requiredHumanReview = true;
     confidence = Math.min(confidence, 0.5);
   }
 
   return {
+    group: divisaoFinal.group,
     occupancyUse: divisaoFinal.occupancyUse,
     division: divisaoFinal.division,
     description: divisaoFinal.description,
@@ -266,6 +296,7 @@ export function classifyOccupancy(input: ClassifyOccupancyInput): ClassifyOccupa
     fireLoadMJm2: fireLoad,
     fireRisk,
     confidence: Math.round(confidence * 100) / 100,
+    source: "inferred_from_text",
     reasoning,
     warnings,
     alternatives,

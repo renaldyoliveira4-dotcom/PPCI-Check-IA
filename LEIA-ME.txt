@@ -1,0 +1,43 @@
+ENTREGA: Correção do motor de exigências de hidrantes/sistemas PPCI
+=====================================================================
+
+O QUE TEM AQUI:
+- 14 arquivos de código pedidos no prompt de correção (matriz normativa,
+  classificador de ocupação, motor de exigências, etc.)
+- vitest.config.ts (novo) — necessário para rodar os testes
+- package.json atualizado (adiciona vitest + vite-tsconfig-paths como
+  dependências de desenvolvimento)
+
+COMO APLICAR:
+1. Descompacte este zip DENTRO da pasta do projeto, sobrescrevendo os
+   arquivos existentes quando perguntado (todos os arquivos vão para os
+   lugares certos automaticamente, pois mantêm a mesma estrutura de pastas
+   "src/...").
+
+2. Abra o CMD na pasta do projeto e rode:
+   npm install
+
+   (isso instala o vitest e o vite-tsconfig-paths que estão no package.json
+   novo — só precisa rodar uma vez)
+
+3. (Opcional, mas recomendado) Rode os testes para confirmar que tudo
+   funciona antes de subir:
+   npx vitest run
+
+   Deve aparecer "96 passed" no final.
+
+4. Adicione e comite tudo de uma vez:
+   git add .
+   git commit -m "Corrige motor de exigencias: hidrante/sistemas agora usam matriz do Decreto 16.302/2015 (Tabela 5/6A-6M), nunca a IT-22 como fonte de obrigatoriedade"
+   git push origin main
+
+PRINCIPAL MUDANÇA:
+O sistema agora SEMPRE consulta a matriz do Decreto 16.302/2015 (Tabela 5
+para edificações <=750m² e <=12m; Tabelas 6A-6M para os demais casos) para
+decidir se hidrante/qualquer outro sistema é obrigatório. A IT-22/2016 NUNCA
+mais decide obrigatoriedade — ela só dimensiona o sistema depois que a
+matriz já confirmou que ele é exigido.
+
+CASO DE TESTE CONFIRMADO:
+D-1, 318,75m², 2 pavimentos, PTS, risco Baixo -> hidrante NOT_REQUIRED,
+com justificativa citando a Tabela 5, exatamente como você esperava.

@@ -19,14 +19,22 @@ export interface OccupancyDivision {
   keywords: string[];
   negativeKeywords: string[];
   /**
-   * true quando a própria divisão já embute uma faixa de carga de incêndio
-   * fixa na definição normativa (ex: I-1, I-2, I-3, J-2, J-3, J-4) — nesses
-   * casos, o valor de carga de incêndio do projeto AJUDA A ESCOLHER a divisão.
-   * false quando a divisão é definida pelo uso, e a carga de incêndio é
-   * apenas informativa/consequência (ex: D-1, C-1), não critério de escolha.
+   * Como a carga de incêndio se relaciona com esta divisão:
+   * - "byMaterial": a divisão é escolhida pela faixa de carga de incêndio do
+   *   material/uso predominante (ex: I-1/I-2/I-3, J-2/J-3/J-4). A carga AJUDA
+   *   A ESCOLHER a divisão.
+   * - "fixed": a divisão tem carga de incêndio padrão/típica do uso, mas a
+   *   divisão em si é definida pelo USO, não pela carga (ex: D-1, C-1). A
+   *   carga é consequência, não critério de escolha.
+   * - "byIT14": a carga de incêndio deve ser obtida a partir da Tabela da
+   *   IT-14 (carga de incêndio específica por ocupação), quando a divisão
+   *   não tiver um valor fixo nem depender de material declarado.
+   * - "notApplicable": divisão para a qual carga de incêndio não é um
+   *   parâmetro relevante (ex: M-1 túnel, L-1 explosivos).
    */
-  requiresFireLoadForDivision: boolean;
-  /** Faixa de carga de incêndio (MJ/m²) que define esta divisão, se aplicável */
+  fireLoadRule: "fixed" | "byIT14" | "byMaterial" | "notApplicable";
+  /** Valor/faixa de carga de incêndio (MJ/m²) típica ou definidora desta divisão, se aplicável */
+  defaultFireLoadMJm2?: number;
   fireLoadRangeMJm2?: { min: number; max: number | null };
   notes: string;
 }
@@ -42,7 +50,8 @@ export const OCCUPANCY_DIVISIONS: OccupancyDivision[] = [
     examples: ["casas térreas", "casas assobradadas isoladas", "casas assobradadas não isoladas", "condomínios horizontais"],
     keywords: ["casa", "residência unifamiliar", "sobrado", "condomínio horizontal", "habitação unifamiliar"],
     negativeKeywords: ["apartamento", "edifício", "pensionato", "alojamento"],
-    requiresFireLoadForDivision: false,
+    fireLoadRule: "fixed",
+    defaultFireLoadMJm2: 300,
     notes: "Classificação conforme Tabela 1 do Decreto Estadual nº 16.302/2015.",
   },
   {
@@ -54,7 +63,8 @@ export const OCCUPANCY_DIVISIONS: OccupancyDivision[] = [
     examples: ["edifícios de apartamento em geral"],
     keywords: ["apartamento", "edifício residencial", "habitação multifamiliar", "condomínio vertical"],
     negativeKeywords: ["casa térrea", "unifamiliar", "hotel", "pensionato"],
-    requiresFireLoadForDivision: false,
+    fireLoadRule: "fixed",
+    defaultFireLoadMJm2: 300,
     notes: "Classificação conforme Tabela 1 do Decreto Estadual nº 16.302/2015.",
   },
   {
@@ -66,7 +76,8 @@ export const OCCUPANCY_DIVISIONS: OccupancyDivision[] = [
     examples: ["pensionatos", "internatos", "alojamentos", "mosteiros", "conventos", "residências geriátricas"],
     keywords: ["pensionato", "internato", "alojamento", "mosteiro", "convento", "residência geriátrica", "habitação coletiva"],
     negativeKeywords: ["hotel", "apartamento", "casa unifamiliar"],
-    requiresFireLoadForDivision: false,
+    fireLoadRule: "fixed",
+    defaultFireLoadMJm2: 300,
     notes: "Capacidade máxima de 16 leitos. Acima disso, reclassificar como B-1.",
   },
 
@@ -80,7 +91,8 @@ export const OCCUPANCY_DIVISIONS: OccupancyDivision[] = [
     examples: ["hotéis", "motéis", "pensões", "hospedarias", "pousadas", "albergues", "casas de cômodos", "divisão A-3 com mais de 16 leitos"],
     keywords: ["hotel", "motel", "pensão", "hospedaria", "pousada", "albergue", "casa de cômodos"],
     negativeKeywords: ["apart-hotel", "flat", "hotel residencial", "cozinha própria"],
-    requiresFireLoadForDivision: false,
+    fireLoadRule: "fixed",
+    defaultFireLoadMJm2: 300,
     notes: "Classificação conforme Tabela 1 do Decreto Estadual nº 16.302/2015.",
   },
   {
@@ -92,7 +104,8 @@ export const OCCUPANCY_DIVISIONS: OccupancyDivision[] = [
     examples: ["apart-hotéis", "flats", "hotéis residenciais"],
     keywords: ["apart-hotel", "flat", "hotel residencial", "cozinha própria"],
     negativeKeywords: ["hotel comum", "pousada", "motel"],
-    requiresFireLoadForDivision: false,
+    fireLoadRule: "fixed",
+    defaultFireLoadMJm2: 300,
     notes: "Diferencia-se de B-1 pela presença de cozinha própria nos apartamentos.",
   },
 
@@ -106,7 +119,8 @@ export const OCCUPANCY_DIVISIONS: OccupancyDivision[] = [
     examples: ["artigos de metal", "louças", "artigos hospitalares"],
     keywords: ["loja", "comércio baixa carga", "artigos de metal", "louças", "artigos hospitalares"],
     negativeKeywords: ["shopping", "supermercado grande", "magazine"],
-    requiresFireLoadForDivision: false,
+    fireLoadRule: "fixed",
+    defaultFireLoadMJm2: 300,
     notes: "Use C-2 quando a carga de incêndio for média/alta (lojas de departamento, magazines, supermercados).",
   },
   {
@@ -118,7 +132,8 @@ export const OCCUPANCY_DIVISIONS: OccupancyDivision[] = [
     examples: ["edifícios de lojas de departamentos", "magazines", "armarinhos", "galerias comerciais", "supermercados em geral", "mercados"],
     keywords: ["loja de departamento", "magazine", "armarinho", "galeria comercial", "supermercado", "mercado"],
     negativeKeywords: ["shopping center", "loja pequena baixa carga"],
-    requiresFireLoadForDivision: false,
+    fireLoadRule: "fixed",
+    defaultFireLoadMJm2: 300,
     notes: "Loja comum deve ser C-1 ou C-2 conforme carga de incêndio calculada.",
   },
   {
@@ -130,7 +145,8 @@ export const OCCUPANCY_DIVISIONS: OccupancyDivision[] = [
     examples: ["shopping centers"],
     keywords: ["shopping center", "shopping", "centro de compras"],
     negativeKeywords: ["loja isolada", "galeria pequena"],
-    requiresFireLoadForDivision: false,
+    fireLoadRule: "fixed",
+    defaultFireLoadMJm2: 300,
     notes: "Shopping center deve ser sempre C-3.",
   },
 
@@ -151,7 +167,8 @@ export const OCCUPANCY_DIVISIONS: OccupancyDivision[] = [
     ],
     keywords: ["escritório", "serviço profissional", "administrativo", "repartição", "consultoria", "sala comercial", "cabeleireiro", "negócios"],
     negativeKeywords: ["banco", "agência bancária", "hospital", "clínica com internação", "restaurante", "loja", "depósito"],
-    requiresFireLoadForDivision: false,
+    fireLoadRule: "fixed",
+    defaultFireLoadMJm2: 300,
     notes: "Classificação conforme Tabela 1 do Decreto Estadual nº 16.302/2015. Escritórios, salas administrativas, repartições públicas, consultorias e centros profissionais normalmente são D-1.",
   },
   {
@@ -163,7 +180,8 @@ export const OCCUPANCY_DIVISIONS: OccupancyDivision[] = [
     examples: ["agências bancárias"],
     keywords: ["banco", "agência bancária", "instituição financeira", "caixa eletrônico"],
     negativeKeywords: ["escritório administrativo comum", "consultoria"],
-    requiresFireLoadForDivision: false,
+    fireLoadRule: "fixed",
+    defaultFireLoadMJm2: 300,
     notes: "Agência bancária deve ser D-2, não D-1, mesmo sendo um serviço profissional.",
   },
   {
@@ -175,7 +193,8 @@ export const OCCUPANCY_DIVISIONS: OccupancyDivision[] = [
     examples: ["lavanderias", "assistência técnica", "reparação e manutenção de aparelhos eletrodomésticos", "chaveiros", "pintura de letreiros"],
     keywords: ["lavanderia", "assistência técnica", "reparação eletrodoméstico", "chaveiro", "pintura de letreiro"],
     negativeKeywords: ["oficina mecânica", "borracharia", "manutenção automotiva", "veículo"],
-    requiresFireLoadForDivision: false,
+    fireLoadRule: "fixed",
+    defaultFireLoadMJm2: 300,
     notes: "Serviços automotivos (oficina, borracharia) são G-4, não D-3.",
   },
   {
@@ -187,7 +206,8 @@ export const OCCUPANCY_DIVISIONS: OccupancyDivision[] = [
     examples: ["laboratórios de análises clínicas sem internação", "laboratórios químicos", "laboratórios fotográficos"],
     keywords: ["laboratório", "análises clínicas", "laboratório químico", "laboratório fotográfico"],
     negativeKeywords: ["clínica médica", "consultório odontológico", "hospital", "internação"],
-    requiresFireLoadForDivision: false,
+    fireLoadRule: "fixed",
+    defaultFireLoadMJm2: 300,
     notes: "Laboratório sem internação deve ser D-4, salvo quando for clínica médica/odontológica sem internação, que tende a H-6.",
   },
 
@@ -201,7 +221,8 @@ export const OCCUPANCY_DIVISIONS: OccupancyDivision[] = [
     examples: ["escolas de primeiro grau", "escolas de segundo grau", "escolas de terceiro grau", "cursos supletivos", "pré-universitário"],
     keywords: ["escola", "colégio", "curso supletivo", "pré-universitário", "ensino fundamental", "ensino médio"],
     negativeKeywords: ["pré-escola", "creche", "escola especial", "academia"],
-    requiresFireLoadForDivision: false,
+    fireLoadRule: "fixed",
+    defaultFireLoadMJm2: 300,
     notes: "Classificação conforme Tabela 1 do Decreto Estadual nº 16.302/2015.",
   },
   {
@@ -213,7 +234,8 @@ export const OCCUPANCY_DIVISIONS: OccupancyDivision[] = [
     examples: ["escola de artes", "escola de artesanato", "escola de línguas", "escola de cultura geral", "escola religiosa"],
     keywords: ["escola de idiomas", "escola de artes", "artesanato", "escola religiosa", "curso de línguas"],
     negativeKeywords: ["ensino fundamental", "ensino médio", "pré-escola"],
-    requiresFireLoadForDivision: false,
+    fireLoadRule: "fixed",
+    defaultFireLoadMJm2: 300,
     notes: "Classificação conforme Tabela 1 do Decreto Estadual nº 16.302/2015.",
   },
   {
@@ -225,7 +247,8 @@ export const OCCUPANCY_DIVISIONS: OccupancyDivision[] = [
     examples: ["academias de ginástica", "academias de musculação", "estúdios de dança", "natação", "artes marciais"],
     keywords: ["academia", "musculação", "ginástica", "estúdio de dança", "aula de dança", "natação", "artes marciais", "pilates", "crossfit"],
     negativeKeywords: ["arquibancada", "ginásio com público", "estádio", "centro esportivo com arquibancada"],
-    requiresFireLoadForDivision: false,
+    fireLoadRule: "fixed",
+    defaultFireLoadMJm2: 300,
     notes: "Academia, musculação, dança, natação ou artes marciais SEM arquibancada devem ser E-3. Com arquibancada, vira F-3.",
   },
   {
@@ -237,7 +260,8 @@ export const OCCUPANCY_DIVISIONS: OccupancyDivision[] = [
     examples: ["centros de treinamento profissionalizante", "escolas técnicas profissionalizantes"],
     keywords: ["treinamento profissional", "curso profissionalizante", "centro de capacitação"],
     negativeKeywords: ["escola regular", "ensino fundamental"],
-    requiresFireLoadForDivision: false,
+    fireLoadRule: "fixed",
+    defaultFireLoadMJm2: 300,
     notes: "Classificação conforme Tabela 1 do Decreto Estadual nº 16.302/2015.",
   },
   {
@@ -249,7 +273,8 @@ export const OCCUPANCY_DIVISIONS: OccupancyDivision[] = [
     examples: ["creches", "jardim de infância", "pré-escola"],
     keywords: ["creche", "jardim de infância", "pré-escola", "berçário", "educação infantil"],
     negativeKeywords: ["ensino fundamental", "escola de primeiro grau"],
-    requiresFireLoadForDivision: false,
+    fireLoadRule: "fixed",
+    defaultFireLoadMJm2: 300,
     notes: "Classificação conforme Tabela 1 do Decreto Estadual nº 16.302/2015.",
   },
   {
@@ -261,7 +286,8 @@ export const OCCUPANCY_DIVISIONS: OccupancyDivision[] = [
     examples: ["escolas especiais para pessoas com deficiência"],
     keywords: ["escola para deficientes", "educação especial", "escola inclusiva especializada"],
     negativeKeywords: ["escola regular sem atendimento especializado"],
-    requiresFireLoadForDivision: false,
+    fireLoadRule: "fixed",
+    defaultFireLoadMJm2: 300,
     notes: "Classificação conforme Tabela 1 do Decreto Estadual nº 16.302/2015.",
   },
 
@@ -275,7 +301,8 @@ export const OCCUPANCY_DIVISIONS: OccupancyDivision[] = [
     examples: ["museus", "galerias de arte", "centros de documentação histórica", "bibliotecas raras"],
     keywords: ["museu", "galeria de arte", "acervo histórico", "biblioteca rara", "obra de valor inestimável"],
     negativeKeywords: ["biblioteca comum", "loja de arte comercial"],
-    requiresFireLoadForDivision: false,
+    fireLoadRule: "fixed",
+    defaultFireLoadMJm2: 300,
     notes: "Classificação conforme Tabela 1 do Decreto Estadual nº 16.302/2015.",
   },
   {
@@ -287,7 +314,8 @@ export const OCCUPANCY_DIVISIONS: OccupancyDivision[] = [
     examples: ["igrejas", "templos", "capelas", "sinagogas", "mesquitas", "salas de velório", "crematórios"],
     keywords: ["igreja", "templo", "capela", "sinagoga", "mesquita", "velório", "crematório", "funeral", "religioso"],
     negativeKeywords: ["clube social", "centro de eventos comercial"],
-    requiresFireLoadForDivision: false,
+    fireLoadRule: "fixed",
+    defaultFireLoadMJm2: 300,
     notes: "Igreja, templo, capela, sinagoga, mesquita, velório, crematório e sala de funeral devem ser F-2.",
   },
   {
@@ -299,7 +327,8 @@ export const OCCUPANCY_DIVISIONS: OccupancyDivision[] = [
     examples: ["estádios", "ginásios poliesportivos com arquibancada", "arenas", "piscinas com arquibancada"],
     keywords: ["estádio", "ginásio com arquibancada", "ginásio poliesportivo com arquibancada", "arena", "centro esportivo com público", "piscina com arquibancada", "ginásio", "arquibancada"],
     negativeKeywords: ["academia sem arquibancada", "estúdio de dança", "musculação"],
-    requiresFireLoadForDivision: false,
+    fireLoadRule: "fixed",
+    defaultFireLoadMJm2: 300,
     notes: "Ginásio, estádio, arena, piscina ou centro esportivo COM arquibancada deve ser F-3. Sem arquibancada, vira E-3.",
   },
   {
@@ -311,7 +340,8 @@ export const OCCUPANCY_DIVISIONS: OccupancyDivision[] = [
     examples: ["rodoviárias", "estações de metrô", "terminais de ônibus", "terminais aeroportuários de passageiros"],
     keywords: ["rodoviária", "terminal de passageiros", "estação de metrô", "terminal de ônibus", "aeroporto"],
     negativeKeywords: ["pátio de containers", "terminal de cargas"],
-    requiresFireLoadForDivision: false,
+    fireLoadRule: "fixed",
+    defaultFireLoadMJm2: 300,
     notes: "Classificação conforme Tabela 1 do Decreto Estadual nº 16.302/2015.",
   },
   {
@@ -323,7 +353,8 @@ export const OCCUPANCY_DIVISIONS: OccupancyDivision[] = [
     examples: ["teatros", "cinemas", "auditórios", "salas de concerto", "óperas"],
     keywords: ["teatro", "cinema", "auditório", "sala de concerto", "ópera", "casa de espetáculos"],
     negativeKeywords: ["boate", "casa de festas", "sala de aula"],
-    requiresFireLoadForDivision: false,
+    fireLoadRule: "fixed",
+    defaultFireLoadMJm2: 300,
     notes: "Classificação conforme Tabela 1 do Decreto Estadual nº 16.302/2015.",
   },
   {
@@ -333,9 +364,10 @@ export const OCCUPANCY_DIVISIONS: OccupancyDivision[] = [
     occupancyUse: "Clubes sociais e diversão",
     description: "Clubes sociais e diversão",
     examples: ["clubes sociais", "salões de festa", "salões de baile", "bingos", "casas de diversão"],
-    keywords: ["clube social", "salão de festa", "salão de baile", "bingo", "restaurante dançante", "casa de diversão"],
+    keywords: ["clube social", "salão de festa", "salão de baile", "bingo", "restaurante dançante", "casa de diversão", "pista de dança"],
     negativeKeywords: ["restaurante simples", "lanchonete", "igreja"],
-    requiresFireLoadForDivision: false,
+    fireLoadRule: "fixed",
+    defaultFireLoadMJm2: 300,
     notes: "Restaurante dançante, clube, salão de baile e bingo devem ser F-6, salvo quando IT-42/2024 ou norma específica direcionar para F-11 (boates, casas de jogos e apostas).",
   },
   {
@@ -347,7 +379,8 @@ export const OCCUPANCY_DIVISIONS: OccupancyDivision[] = [
     examples: ["circos", "parques de diversão itinerantes", "tendas para eventos temporários"],
     keywords: ["circo", "parque itinerante", "tenda de evento temporário", "construção provisória"],
     negativeKeywords: ["construção permanente"],
-    requiresFireLoadForDivision: false,
+    fireLoadRule: "fixed",
+    defaultFireLoadMJm2: 300,
     notes: "Classificação conforme Tabela 1 do Decreto Estadual nº 16.302/2015.",
   },
   {
@@ -359,7 +392,8 @@ export const OCCUPANCY_DIVISIONS: OccupancyDivision[] = [
     examples: ["restaurantes", "lanchonetes", "bares", "cafés", "refeitórios", "cantinas"],
     keywords: ["restaurante", "lanchonete", "bar", "café", "refeitório", "cantina", "pizzaria", "padaria com mesas"],
     negativeKeywords: ["restaurante dançante", "boate", "clube", "salão de baile"],
-    requiresFireLoadForDivision: false,
+    fireLoadRule: "fixed",
+    defaultFireLoadMJm2: 300,
     notes: "Restaurante, lanchonete, bar, café, refeitório e cantina SEM entretenimento devem ser F-8. Com entretenimento dançante, vira F-6 ou F-11.",
   },
   {
@@ -371,7 +405,8 @@ export const OCCUPANCY_DIVISIONS: OccupancyDivision[] = [
     examples: ["parques de diversão fixos", "parques temáticos", "centros de recreação"],
     keywords: ["parque de diversão", "parque temático", "centro de recreação pública"],
     negativeKeywords: ["construção provisória", "circo itinerante"],
-    requiresFireLoadForDivision: false,
+    fireLoadRule: "fixed",
+    defaultFireLoadMJm2: 300,
     notes: "Classificação conforme Tabela 1 do Decreto Estadual nº 16.302/2015.",
   },
   {
@@ -383,7 +418,8 @@ export const OCCUPANCY_DIVISIONS: OccupancyDivision[] = [
     examples: ["feiras de exposição", "exposições agropecuárias", "zoológicos", "aquários", "feiras de negócios"],
     keywords: ["feira de exposição", "exposição agropecuária", "zoológico", "aquário", "feira de negócios", "centro de convenções"],
     negativeKeywords: ["museu", "galeria de arte"],
-    requiresFireLoadForDivision: false,
+    fireLoadRule: "fixed",
+    defaultFireLoadMJm2: 300,
     notes: "Classificação conforme Tabela 1 do Decreto Estadual nº 16.302/2015.",
   },
   {
@@ -395,7 +431,8 @@ export const OCCUPANCY_DIVISIONS: OccupancyDivision[] = [
     examples: ["boates", "casas de jogos e apostas", "boliches", "salões de sinuca"],
     keywords: ["boate", "casa de jogos", "casa de apostas", "boliche", "salão de sinuca", "casa noturna"],
     negativeKeywords: ["clube social tradicional", "restaurante", "igreja"],
-    requiresFireLoadForDivision: false,
+    fireLoadRule: "fixed",
+    defaultFireLoadMJm2: 300,
     notes: "Divisão prevista pela IT-42/2024 (Projeto Técnico Simplificado) ou norma atualizada aplicável. Quando houver dúvida entre F-6 e F-11, registrar alerta técnico.",
   },
 
@@ -409,7 +446,8 @@ export const OCCUPANCY_DIVISIONS: OccupancyDivision[] = [
     examples: ["garagens privadas sem abastecimento", "estacionamentos de funcionários"],
     keywords: ["garagem privada", "estacionamento sem público", "garagem sem abastecimento"],
     negativeKeywords: ["estacionamento público", "posto de combustível"],
-    requiresFireLoadForDivision: false,
+    fireLoadRule: "fixed",
+    defaultFireLoadMJm2: 300,
     notes: "Classificação conforme Tabela 1 do Decreto Estadual nº 16.302/2015.",
   },
   {
@@ -421,7 +459,8 @@ export const OCCUPANCY_DIVISIONS: OccupancyDivision[] = [
     examples: ["estacionamentos públicos sem abastecimento", "garagens comerciais"],
     keywords: ["estacionamento público", "garagem comercial", "estacionamento de shopping"],
     negativeKeywords: ["posto de combustível", "garagem privada"],
-    requiresFireLoadForDivision: false,
+    fireLoadRule: "fixed",
+    defaultFireLoadMJm2: 300,
     notes: "Classificação conforme Tabela 1 do Decreto Estadual nº 16.302/2015.",
   },
   {
@@ -433,7 +472,8 @@ export const OCCUPANCY_DIVISIONS: OccupancyDivision[] = [
     examples: ["postos de gasolina", "postos de abastecimento"],
     keywords: ["posto de combustível", "posto de gasolina", "abastecimento de veículos"],
     negativeKeywords: ["estacionamento sem combustível", "oficina mecânica"],
-    requiresFireLoadForDivision: false,
+    fireLoadRule: "fixed",
+    defaultFireLoadMJm2: 300,
     notes: "Posto de abastecimento deve ser G-3.",
   },
   {
@@ -445,7 +485,8 @@ export const OCCUPANCY_DIVISIONS: OccupancyDivision[] = [
     examples: ["oficinas mecânicas", "borracharias", "lava-rápidos", "funilarias"],
     keywords: ["oficina mecânica", "borracharia", "lava-rápido", "funilaria", "manutenção automotiva", "reparo de veículo"],
     negativeKeywords: ["posto de combustível", "estacionamento", "lavanderia comum"],
-    requiresFireLoadForDivision: false,
+    fireLoadRule: "fixed",
+    defaultFireLoadMJm2: 300,
     notes: "Oficina de veículo, borracharia e manutenção automotiva devem ser G-4 (não D-3).",
   },
   {
@@ -457,7 +498,8 @@ export const OCCUPANCY_DIVISIONS: OccupancyDivision[] = [
     examples: ["hangares de aeronaves"],
     keywords: ["hangar", "abrigo de aeronave"],
     negativeKeywords: ["garagem comum", "estacionamento de carros"],
-    requiresFireLoadForDivision: false,
+    fireLoadRule: "fixed",
+    defaultFireLoadMJm2: 300,
     notes: "Classificação conforme Tabela 1 do Decreto Estadual nº 16.302/2015.",
   },
 
@@ -471,7 +513,8 @@ export const OCCUPANCY_DIVISIONS: OccupancyDivision[] = [
     examples: ["clínicas veterinárias com internação", "hospitais veterinários"],
     keywords: ["hospital veterinário", "clínica veterinária com internação", "veterinário"],
     negativeKeywords: ["clínica médica humana", "petshop sem internação"],
-    requiresFireLoadForDivision: false,
+    fireLoadRule: "fixed",
+    defaultFireLoadMJm2: 300,
     notes: "Classificação conforme Tabela 1 do Decreto Estadual nº 16.302/2015.",
   },
   {
@@ -483,7 +526,8 @@ export const OCCUPANCY_DIVISIONS: OccupancyDivision[] = [
     examples: ["asilos", "casas de repouso com cuidados especiais", "clínicas de reabilitação"],
     keywords: ["asilo", "casa de repouso", "clínica de reabilitação", "cuidados especiais", "limitação física", "limitação mental"],
     negativeKeywords: ["residência geriátrica comum sem cuidados especiais", "hotel"],
-    requiresFireLoadForDivision: false,
+    fireLoadRule: "fixed",
+    defaultFireLoadMJm2: 300,
     notes: "Classificação conforme Tabela 1 do Decreto Estadual nº 16.302/2015.",
   },
   {
@@ -495,7 +539,8 @@ export const OCCUPANCY_DIVISIONS: OccupancyDivision[] = [
     examples: ["hospitais", "prontos-socorros", "clínicas com internação", "maternidades"],
     keywords: ["hospital", "pronto-socorro", "clínica com internação", "maternidade", "UPA", "leitos hospitalares"],
     negativeKeywords: ["clínica sem internação", "consultório", "laboratório"],
-    requiresFireLoadForDivision: false,
+    fireLoadRule: "fixed",
+    defaultFireLoadMJm2: 300,
     notes: "Hospital, clínica com internação, pronto-socorro e similares devem ser H-3.",
   },
   {
@@ -507,7 +552,8 @@ export const OCCUPANCY_DIVISIONS: OccupancyDivision[] = [
     examples: ["quartéis", "delegacias", "batalhões", "bases militares"],
     keywords: ["quartel", "delegacia", "batalhão", "base militar", "forças armadas", "polícia"],
     negativeKeywords: ["repartição pública civil comum"],
-    requiresFireLoadForDivision: false,
+    fireLoadRule: "fixed",
+    defaultFireLoadMJm2: 300,
     notes: "Classificação conforme Tabela 1 do Decreto Estadual nº 16.302/2015.",
   },
   {
@@ -519,7 +565,8 @@ export const OCCUPANCY_DIVISIONS: OccupancyDivision[] = [
     examples: ["presídios", "penitenciárias", "centros de detenção"],
     keywords: ["presídio", "penitenciária", "centro de detenção", "cadeia", "restrição de liberdade"],
     negativeKeywords: ["hospital", "asilo"],
-    requiresFireLoadForDivision: false,
+    fireLoadRule: "fixed",
+    defaultFireLoadMJm2: 300,
     notes: "Classificação conforme Tabela 1 do Decreto Estadual nº 16.302/2015.",
   },
   {
@@ -531,7 +578,8 @@ export const OCCUPANCY_DIVISIONS: OccupancyDivision[] = [
     examples: ["consultórios médicos", "consultórios odontológicos", "clínicas sem internação", "clínicas de estética"],
     keywords: ["consultório médico", "consultório odontológico", "clínica sem internação", "clínica médica", "clínica odontológica", "clínica de estética"],
     negativeKeywords: ["hospital", "com internação", "pronto-socorro", "laboratório de análises", "leitos"],
-    requiresFireLoadForDivision: false,
+    fireLoadRule: "fixed",
+    defaultFireLoadMJm2: 300,
     notes: "Clínica médica ou odontológica sem internação deve ser H-6 (não D-4, que é exclusivo de laboratório).",
   },
 
@@ -545,7 +593,8 @@ export const OCCUPANCY_DIVISIONS: OccupancyDivision[] = [
     examples: ["aço", "aparelhos de rádio e som", "armas", "artigos de metal", "gesso", "esculturas de pedra", "ferramentas", "jóias", "relógios", "sabão", "serralheria"],
     keywords: ["indústria baixo potencial", "aço", "artigos de metal", "ferramentas", "serralheria", "indústria leve", "indústria", "fábrica", "processo industrial"],
     negativeKeywords: ["inflamáveis", "alto risco industrial"],
-    requiresFireLoadForDivision: true,
+    fireLoadRule: "byMaterial",
+    defaultFireLoadMJm2: 0,
     fireLoadRangeMJm2: { min: 0, max: 300 },
     notes: "Indústria com carga de incêndio até 300 MJ/m².",
   },
@@ -558,7 +607,8 @@ export const OCCUPANCY_DIVISIONS: OccupancyDivision[] = [
     examples: ["artigos de vidro", "automóveis", "bebidas destiladas", "instrumentos musicais", "móveis", "alimentos", "marcenarias", "fábricas de caixas"],
     keywords: ["indústria médio potencial", "marcenaria", "fábrica de móveis", "indústria alimentícia", "fábrica em geral"],
     negativeKeywords: ["indústria leve baixo risco", "indústria de explosivos"],
-    requiresFireLoadForDivision: true,
+    fireLoadRule: "byMaterial",
+    defaultFireLoadMJm2: 300,
     fireLoadRangeMJm2: { min: 300, max: 1200 },
     notes: "Indústria com carga de incêndio entre 300 e 1.200 MJ/m² (300 ainda é I-1 se no limite inferior; ver regra de fronteira no classificador).",
   },
@@ -571,7 +621,8 @@ export const OCCUPANCY_DIVISIONS: OccupancyDivision[] = [
     examples: ["atividades industriais com inflamáveis", "materiais oxidantes", "ceras", "espuma sintética", "grãos", "tintas", "borracha", "processamento de lixo"],
     keywords: ["indústria alto risco", "inflamáveis industriais", "tintas", "borracha", "processamento de lixo"],
     negativeKeywords: ["indústria leve", "indústria médio risco"],
-    requiresFireLoadForDivision: true,
+    fireLoadRule: "byMaterial",
+    defaultFireLoadMJm2: 1200,
     fireLoadRangeMJm2: { min: 1200, max: null },
     notes: "Indústria com carga de incêndio superior a 1.200 MJ/m².",
   },
@@ -586,7 +637,7 @@ export const OCCUPANCY_DIVISIONS: OccupancyDivision[] = [
     examples: ["tijolos", "pedras", "areias", "cimentos", "metais e outros materiais incombustíveis, todos sem embalagem"],
     keywords: ["depósito de material incombustível", "depósito de cimento", "depósito de metais", "depósito de areia", "depósito de tijolos"],
     negativeKeywords: ["depósito com embalagem combustível", "depósito de papel"],
-    requiresFireLoadForDivision: false,
+    fireLoadRule: "byMaterial",
     notes: "Depósito de material totalmente incombustível e sem embalagem.",
   },
   {
@@ -598,7 +649,8 @@ export const OCCUPANCY_DIVISIONS: OccupancyDivision[] = [
     examples: ["depósitos gerais com baixa carga de incêndio"],
     keywords: ["depósito baixa carga", "armazém baixa carga", "depósito", "armazém", "depósito geral"],
     negativeKeywords: ["depósito de explosivos", "depósito de inflamáveis alta carga"],
-    requiresFireLoadForDivision: true,
+    fireLoadRule: "byMaterial",
+    defaultFireLoadMJm2: 0,
     fireLoadRangeMJm2: { min: 0, max: 300 },
     notes: "Depósito com carga de incêndio até 300 MJ/m² (300 MJ/m² ainda é J-2 / risco Baixo).",
   },
@@ -611,7 +663,8 @@ export const OCCUPANCY_DIVISIONS: OccupancyDivision[] = [
     examples: ["depósitos gerais com carga de incêndio média"],
     keywords: ["depósito média carga", "armazém média carga"],
     negativeKeywords: ["depósito incombustível", "depósito alta carga"],
-    requiresFireLoadForDivision: true,
+    fireLoadRule: "byMaterial",
+    defaultFireLoadMJm2: 301,
     fireLoadRangeMJm2: { min: 301, max: 1200 },
     notes: "Depósito com carga de incêndio entre 301 e 1.200 MJ/m² (301 MJ/m² já entra como J-3 / risco Médio).",
   },
@@ -624,7 +677,8 @@ export const OCCUPANCY_DIVISIONS: OccupancyDivision[] = [
     examples: ["depósitos gerais com carga de incêndio elevada"],
     keywords: ["depósito alta carga", "armazém alta carga", "depósito inflamáveis"],
     negativeKeywords: ["depósito incombustível", "depósito baixa carga"],
-    requiresFireLoadForDivision: true,
+    fireLoadRule: "byMaterial",
+    defaultFireLoadMJm2: 1201,
     fireLoadRangeMJm2: { min: 1201, max: null },
     notes: "Depósito com carga de incêndio superior a 1.200 MJ/m².",
   },
@@ -639,7 +693,7 @@ export const OCCUPANCY_DIVISIONS: OccupancyDivision[] = [
     examples: ["lojas de fogos de artifício", "comércio de explosivos controlados"],
     keywords: ["fogos de artifício", "comércio de explosivos", "loja de pirotecnia"],
     negativeKeywords: ["indústria de explosivos", "depósito de explosivos"],
-    requiresFireLoadForDivision: false,
+    fireLoadRule: "notApplicable",
     notes: "Classificação conforme Tabela 1 do Decreto Estadual nº 16.302/2015.",
   },
   {
@@ -651,7 +705,7 @@ export const OCCUPANCY_DIVISIONS: OccupancyDivision[] = [
     examples: ["fábricas de explosivos", "fábricas de fogos de artifício"],
     keywords: ["indústria de explosivos", "fábrica de explosivos", "fábrica de fogos de artifício"],
     negativeKeywords: ["comércio de explosivos", "depósito de explosivos"],
-    requiresFireLoadForDivision: false,
+    fireLoadRule: "notApplicable",
     notes: "Classificação conforme Tabela 1 do Decreto Estadual nº 16.302/2015.",
   },
   {
@@ -663,7 +717,7 @@ export const OCCUPANCY_DIVISIONS: OccupancyDivision[] = [
     examples: ["paióis", "depósitos de munição", "depósitos de explosivos industriais"],
     keywords: ["paiol", "depósito de munição", "depósito de explosivos"],
     negativeKeywords: ["comércio de explosivos", "indústria de explosivos"],
-    requiresFireLoadForDivision: false,
+    fireLoadRule: "notApplicable",
     notes: "Classificação conforme Tabela 1 do Decreto Estadual nº 16.302/2015.",
   },
 
@@ -677,7 +731,7 @@ export const OCCUPANCY_DIVISIONS: OccupancyDivision[] = [
     examples: ["túneis rodoviários", "túneis ferroviários", "túneis marítimos"],
     keywords: ["túnel", "túnel rodoviário", "túnel ferroviário", "túnel marítimo"],
     negativeKeywords: ["viaduto aberto", "ponte"],
-    requiresFireLoadForDivision: false,
+    fireLoadRule: "notApplicable",
     notes: "Classificação conforme Tabela 1 do Decreto Estadual nº 16.302/2015.",
   },
   {
@@ -689,7 +743,8 @@ export const OCCUPANCY_DIVISIONS: OccupancyDivision[] = [
     examples: ["refinarias", "centrais de GLP", "depósitos de combustíveis líquidos", "terminais de distribuição de gás"],
     keywords: ["líquido inflamável", "gás inflamável", "glp", "central de gás", "refinaria", "combustível"],
     negativeKeywords: ["posto de abastecimento de veículos (classificar como G-3)"],
-    requiresFireLoadForDivision: false,
+    fireLoadRule: "fixed",
+    defaultFireLoadMJm2: 300,
     notes: "Líquidos/gases inflamáveis ou combustíveis em produção, manipulação, armazenamento ou distribuição devem acionar M-2 e também riscos específicos (GLP, líquidos inflamáveis).",
   },
   {
@@ -701,7 +756,8 @@ export const OCCUPANCY_DIVISIONS: OccupancyDivision[] = [
     examples: ["centrais telefônicas", "subestações de energia", "centros de transmissão de dados", "centrais de distribuição elétrica"],
     keywords: ["central telefônica", "subestação", "central de energia", "central de comunicação", "torre de transmissão"],
     negativeKeywords: ["escritório administrativo comum"],
-    requiresFireLoadForDivision: false,
+    fireLoadRule: "fixed",
+    defaultFireLoadMJm2: 300,
     notes: "Subestação, central de energia, central telefônica ou comunicação deve ser M-3.",
   },
   {
@@ -713,7 +769,8 @@ export const OCCUPANCY_DIVISIONS: OccupancyDivision[] = [
     examples: ["canteiros de obra", "edificações em demolição"],
     keywords: ["canteiro de obra", "construção em andamento", "demolição"],
     negativeKeywords: ["edificação concluída e em uso"],
-    requiresFireLoadForDivision: false,
+    fireLoadRule: "fixed",
+    defaultFireLoadMJm2: 300,
     notes: "Classificação conforme Tabela 1 do Decreto Estadual nº 16.302/2015.",
   },
   {
@@ -725,7 +782,8 @@ export const OCCUPANCY_DIVISIONS: OccupancyDivision[] = [
     examples: ["silos de grãos", "armazéns de grãos"],
     keywords: ["silo", "armazém de grãos", "silo de grãos"],
     negativeKeywords: ["depósito comum", "armazém de outros materiais"],
-    requiresFireLoadForDivision: false,
+    fireLoadRule: "fixed",
+    defaultFireLoadMJm2: 300,
     notes: "Silos devem ser M-5.",
   },
   {
@@ -737,7 +795,7 @@ export const OCCUPANCY_DIVISIONS: OccupancyDivision[] = [
     examples: ["florestas", "reservas ecológicas", "parques florestais"],
     keywords: ["floresta", "reserva ecológica", "parque florestal", "mata nativa"],
     negativeKeywords: ["parque urbano", "praça"],
-    requiresFireLoadForDivision: false,
+    fireLoadRule: "notApplicable",
     notes: "Classificação conforme Tabela 1 do Decreto Estadual nº 16.302/2015.",
   },
   {
@@ -749,7 +807,8 @@ export const OCCUPANCY_DIVISIONS: OccupancyDivision[] = [
     examples: ["pátios de contêineres portuários", "depósitos de contêineres"],
     keywords: ["pátio de contêiner", "depósito de contêiner", "terminal de contêiner"],
     negativeKeywords: ["terminal de passageiros"],
-    requiresFireLoadForDivision: false,
+    fireLoadRule: "fixed",
+    defaultFireLoadMJm2: 300,
     notes: "Classificação conforme Tabela 1 do Decreto Estadual nº 16.302/2015.",
   },
 ];
