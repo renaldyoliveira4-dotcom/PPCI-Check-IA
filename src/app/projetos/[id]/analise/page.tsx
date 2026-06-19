@@ -7,6 +7,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { createClient } from "@/lib/supabase/client";
+import { analytics } from "@/lib/analytics";
 
 const STEPS = [
   { icon: FileSearch, label: "Enviando plantas para análise" },
@@ -47,6 +48,8 @@ export default function AnalisePage() {
 
     // Etapa 1: enviar
     setStep(1);
+    analytics.analiseIniciada({ projeto_id: projectId });
+    const inicioMs = Date.now();
 
     // Chama o endpoint de análise (que faz tudo no servidor)
     let resp: Response;
@@ -57,6 +60,7 @@ export default function AnalisePage() {
         body: JSON.stringify({ project_id: projectId }),
       });
     } catch (e) {
+      analytics.analiseFalhou({ projeto_id: projectId, motivo: "erro_conexao" });
       setError(
         "Não foi possível conectar à API de análise. Verifique sua conexão."
       );
@@ -67,6 +71,13 @@ export default function AnalisePage() {
 
     if (!resp.ok) {
       const data = await resp.json().catch(() => ({}));
+      if (resp.status === 402 || data.error?.toLowerCase().includes("token")) {
+        analytics.tokensEsgotados({ projeto_id: projectId });
+      }
+      analytics.analiseFalhou({
+        projeto_id: projectId,
+        motivo: data.error || `http_${resp.status}`,
+      });
       setError(
         data.error ||
           `A API retornou erro ${resp.status}. Verifique se a chave ANTHROPIC_API_KEY está configurada no .env.local.`
@@ -74,7 +85,16 @@ export default function AnalisePage() {
       return;
     }
 
+    const respData = await resp.json().catch(() => ({}));
+
     setStep(3);
+    analytics.analiseConcluida({
+      projeto_id: projectId,
+      nota: respData?.analysis?.nota ?? null,
+      status_aprovacao: respData?.analysis?.status_aprovacao ?? null,
+      duracao_segundos: Math.round((Date.now() - inicioMs) / 1000),
+      tokens_restantes: respData?.tokens_restantes,
+    });
     await new Promise((r) => setTimeout(r, 600));
 
     router.push(`/projetos/${projectId}/relatorio`);

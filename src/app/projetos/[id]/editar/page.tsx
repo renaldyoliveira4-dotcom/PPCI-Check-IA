@@ -10,6 +10,7 @@ import { Input, Select } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { createClient } from "@/lib/supabase/client";
 import { OCCUPANCY_TYPES, BRAZILIAN_STATES } from "@/types";
+import { analytics } from "@/lib/analytics";
 
 export default function EditarProjetoPage({
   params,
@@ -114,6 +115,7 @@ export default function EditarProjetoPage({
       return;
     }
 
+    analytics.projetoEditado({ projeto_id: params.id });
     router.push(`/projetos/${params.id}`);
   };
 
@@ -147,6 +149,7 @@ export default function EditarProjetoPage({
       return;
     }
 
+    analytics.projetoApagado({ projeto_id: params.id });
     router.push("/dashboard");
   };
 

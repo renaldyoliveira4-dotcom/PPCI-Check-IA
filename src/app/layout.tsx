@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Space_Grotesk, DM_Sans } from "next/font/google";
 import "./globals.css";
+import { PostHogProvider } from "@/components/analytics/PostHogProvider";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -41,7 +42,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR" className={`${inter.variable} ${spaceGrotesk.variable} ${dmSans.variable}`}>
-      <body className="font-sans">{children}</body>
+      <body className="font-sans">
+        <PostHogProvider>{children}</PostHogProvider>
+      </body>
     </html>
   );
 }

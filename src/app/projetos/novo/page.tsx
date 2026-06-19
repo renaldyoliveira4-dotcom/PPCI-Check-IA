@@ -10,6 +10,7 @@ import { Input, Select } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { createClient } from "@/lib/supabase/client";
 import { OCCUPANCY_TYPES, BRAZILIAN_STATES } from "@/types";
+import { analytics } from "@/lib/analytics";
 
 export default function NovoProjetoPage() {
   const router = useRouter();
@@ -29,6 +30,7 @@ export default function NovoProjetoPage() {
   });
 
   useEffect(() => {
+    analytics.novoProjetoIniciado();
     const supabase = createClient();
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) {
@@ -83,6 +85,11 @@ export default function NovoProjetoPage() {
       setLoading(false);
       return;
     }
+
+    analytics.novoProjetoCriado({
+      projeto_id: data.id,
+      area_m2: data.built_area,
+    });
 
     router.push(`/projetos/${data.id}/upload`);
   };

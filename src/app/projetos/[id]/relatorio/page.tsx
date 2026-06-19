@@ -22,6 +22,7 @@ import { Badge, StatusBadge, RiskBadge } from "@/components/ui/Badge";
 import { ScoreCircle } from "@/components/ui/ProgressBar";
 import { formatDateTime, projectStatusLabel } from "@/lib/utils";
 import { DownloadRelatorio } from "@/components/relatorio/DownloadRelatorio";
+import { TrackRelatorioView } from "@/components/relatorio/TrackRelatorioView";
 import type { AnalysisItem, ItemStatus } from "@/types";
 
 export default async function RelatorioPage({
@@ -204,6 +205,7 @@ export default async function RelatorioPage({
 
       {/* Painel principal: nota + status + sumário */}
       <div id="relatorio-content">
+      <TrackRelatorioView projetoId={project.id} />
       <Card className="mb-8 overflow-hidden">
         <div className="grid lg:grid-cols-[280px_1fr]">
           {/* Lado esquerdo: nota técnica */}

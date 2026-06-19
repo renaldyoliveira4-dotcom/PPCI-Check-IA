@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { createClient } from "@/lib/supabase/client";
+import { analytics, identifyUser } from "@/lib/analytics";
 
 export default function LoginPage() {
   return (
@@ -70,7 +71,7 @@ function LoginForm() {
     setError(null);
 
     const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
@@ -84,6 +85,11 @@ function LoginForm() {
       setLoading(false);
       return;
     }
+
+    if (data.user) {
+      identifyUser(data.user.id, { email });
+    }
+    analytics.loginRealizado({ metodo: "email" });
 
     router.push(redirect);
     router.refresh();
@@ -187,4 +193,3 @@ function GoogleIcon({ className }: { className?: string }) {
     </svg>
   );
 }
-

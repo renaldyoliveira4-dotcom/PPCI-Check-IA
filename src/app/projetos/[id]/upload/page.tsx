@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/Button";
 import { MultiFileUpload } from "@/components/ui/MultiFileUpload";
 import { createClient } from "@/lib/supabase/client";
 import type { Project } from "@/types";
+import { analytics } from "@/lib/analytics";
 
 export default function UploadPage() {
   const router = useRouter();
@@ -92,6 +93,7 @@ export default function UploadPage() {
     }
     setUploading(true);
     setError(null);
+    analytics.uploadIniciado({ projeto_id: project.id });
 
     const supabase = createClient();
     const {
@@ -141,10 +143,16 @@ export default function UploadPage() {
         .eq("id", project.id);
 
       setProgress("Iniciando análise…");
+      analytics.uploadConcluido({
+        projeto_id: project.id,
+        tamanho_kb: Math.round(allFiles.reduce((acc, f) => acc + f.file.size, 0) / 1024),
+        paginas: allFiles.length,
+      });
       router.push(`/projetos/${project.id}/analise`);
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Erro desconhecido";
+      analytics.uploadFalhou({ projeto_id: project.id, motivo: message });
       setError(`Não foi possível enviar: ${message}`);
       setUploading(false);
       setProgress(null);

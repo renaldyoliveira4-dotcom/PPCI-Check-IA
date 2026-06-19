@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { createClient } from "@/lib/supabase/client";
+import { analytics, identifyUser } from "@/lib/analytics";
 
 export default function CadastroPage() {
   const router = useRouter();
@@ -52,9 +53,17 @@ export default function CadastroPage() {
     // Se confirmação de e-mail estiver habilitada, mostrar mensagem.
     // Caso contrário, redirecionar diretamente.
     if (data.session) {
+      if (data.user) {
+        identifyUser(data.user.id, { email, name });
+      }
+      analytics.cadastroConcluido({ metodo: "email" });
       router.push("/dashboard");
       router.refresh();
     } else {
+      if (data.user) {
+        identifyUser(data.user.id, { email, name });
+      }
+      analytics.cadastroConcluido({ metodo: "email" });
       setSuccess(true);
       setLoading(false);
     }

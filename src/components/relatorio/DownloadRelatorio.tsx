@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Download } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { analytics } from "@/lib/analytics";
 
 export interface ItemRelatorio {
   sistema: string;
@@ -340,6 +341,7 @@ export function DownloadRelatorio({ dados }: { dados: DadosRelatorio }) {
 
   const handlePrint = () => {
     setLoading(true);
+    analytics.relatorioBaixado({ projeto_id: dados.projetoNome, formato: "pdf" });
     try {
       const html = gerarHtmlImpressao(dados);
       const janela = window.open("", "_blank");

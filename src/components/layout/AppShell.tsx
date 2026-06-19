@@ -22,6 +22,7 @@ import { createClient } from "@/lib/supabase/client";
 import { StateSelector } from "@/components/layout/StateSelector";
 import { WhatsAppButton } from "@/components/layout/WhatsAppButton";
 import { SITE_CONFIG } from "@/lib/config";
+import { resetUser } from "@/lib/analytics";
 
 const NAV_GROUPS = [
   {
@@ -66,6 +67,7 @@ export function AppShell({
   const handleSignOut = async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
+    resetUser();
     router.push("/");
     router.refresh();
   };

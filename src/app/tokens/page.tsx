@@ -13,6 +13,7 @@ import { createClient } from "@/lib/supabase/server";
 import { AppShell } from "@/components/layout/AppShell";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { TrackTokensView } from "@/components/analytics/TrackTokensView";
 import { Badge } from "@/components/ui/Badge";
 import { formatDate } from "@/lib/utils";
 import type { TokenTransaction } from "@/types";
@@ -68,6 +69,7 @@ export default async function TokensPage() {
 
   return (
     <AppShell userName={profile?.name} userEmail={profile?.email}>
+      <TrackTokensView tokensRestantes={tokensAtual} />
       <Link
         href="/dashboard"
         className="mb-6 inline-flex items-center gap-1.5 text-sm text-navy-600 hover:text-navy-900"
