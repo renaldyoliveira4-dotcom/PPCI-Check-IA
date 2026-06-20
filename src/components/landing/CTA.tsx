@@ -28,8 +28,8 @@ export function CTA() {
           </Link>
 
           <p className="mt-4 text-sm text-white/50">
-            Depois, continue no plano de lançamento por R$ 29,90/mês com 30
-            tokens mensais.
+            Depois, continue com a assinatura de R$ 69,90/mês com 30
+            tokens mensais, ou compre um pacote avulso quando precisar.
           </p>
         </div>
 

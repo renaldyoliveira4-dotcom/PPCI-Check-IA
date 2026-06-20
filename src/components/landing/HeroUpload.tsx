@@ -181,8 +181,8 @@ export function HeroUpload() {
                 />
                 <FeatureChip
                   icon={CheckCircle2}
-                  label="R$ 29,90/mês"
-                  description="Plano de lançamento"
+                  label="A partir de R$ 24,90"
+                  description="Pacotes avulsos ou assinatura"
                 />
               </div>
 
