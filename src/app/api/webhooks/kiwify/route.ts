@@ -103,7 +103,17 @@ export async function POST(request: NextRequest) {
   }
 
   if (tokenRecebido !== KIWIFY_WEBHOOK_TOKEN) {
-    console.warn("Webhook Kiwify recebido com token inválido ou ausente.");
+    // DIAGNÓSTICO TEMPORÁRIO — não expõe os valores completos, só
+    // comprimento e os 2 primeiros/últimos caracteres de cada um, o
+    // suficiente para identificar problemas de espaço/caractere sem
+    // vazar o segredo completo nos logs.
+    const recebidoInfo = tokenRecebido
+      ? `len=${tokenRecebido.length} inicio="${tokenRecebido.slice(0, 2)}" fim="${tokenRecebido.slice(-2)}"`
+      : "ausente (null)";
+    const esperadoInfo = `len=${KIWIFY_WEBHOOK_TOKEN.length} inicio="${KIWIFY_WEBHOOK_TOKEN.slice(0, 2)}" fim="${KIWIFY_WEBHOOK_TOKEN.slice(-2)}"`;
+    console.warn(
+      `Webhook Kiwify recebido com token inválido ou ausente. Recebido: [${recebidoInfo}] | Esperado: [${esperadoInfo}] | URL completa: ${request.url}`
+    );
     return NextResponse.json({ error: "Token inválido." }, { status: 401 });
   }
 
