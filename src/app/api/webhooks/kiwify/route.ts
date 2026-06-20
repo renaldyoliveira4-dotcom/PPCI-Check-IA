@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import crypto from "crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   findPackageByAmountCents,
@@ -93,34 +94,65 @@ function resolvePackage(payload: KiwifyWebhookPayload): TokenPackage | undefined
 export async function POST(request: NextRequest) {
   const supabase = createAdminClient();
 
-  // ── 1. Validação do token ──────────────────────────────────────────
-  const url = new URL(request.url);
-  const tokenRecebido = url.searchParams.get("token");
-
   if (!KIWIFY_WEBHOOK_TOKEN) {
     console.error("KIWIFY_WEBHOOK_TOKEN não configurado nas variáveis de ambiente.");
     return NextResponse.json({ error: "Webhook não configurado no servidor." }, { status: 500 });
   }
 
-  if (tokenRecebido !== KIWIFY_WEBHOOK_TOKEN) {
-    // DIAGNÓSTICO TEMPORÁRIO — não expõe os valores completos, só
-    // comprimento e os 2 primeiros/últimos caracteres de cada um, o
-    // suficiente para identificar problemas de espaço/caractere sem
-    // vazar o segredo completo nos logs.
-    const recebidoInfo = tokenRecebido
-      ? `len=${tokenRecebido.length} inicio="${tokenRecebido.slice(0, 2)}" fim="${tokenRecebido.slice(-2)}"`
-      : "ausente (null)";
-    const esperadoInfo = `len=${KIWIFY_WEBHOOK_TOKEN.length} inicio="${KIWIFY_WEBHOOK_TOKEN.slice(0, 2)}" fim="${KIWIFY_WEBHOOK_TOKEN.slice(-2)}"`;
-    console.warn(
-      `Webhook Kiwify recebido com token inválido ou ausente. Recebido: [${recebidoInfo}] | Esperado: [${esperadoInfo}] | URL completa: ${request.url}`
-    );
-    return NextResponse.json({ error: "Token inválido." }, { status: 401 });
+  // ── 1. Ler o corpo bruto ANTES de qualquer parse ────────────────────
+  // A assinatura HMAC da Kiwify é calculada sobre os bytes exatos do
+  // corpo da requisição — se primeiro fizéssemos request.json() e depois
+  // tentássemos recalcular a partir do objeto parseado, a formatação
+  // (espaços, ordem de chaves) poderia não bater byte a byte com o que a
+  // Kiwify assinou, invalidando a verificação mesmo com o segredo certo.
+  const rawBody = await request.text();
+
+  // ── 2. Validação via assinatura HMAC-SHA1 ───────────────────────────
+  // A Kiwify NÃO envia o token em texto puro — ela envia, na query string,
+  // um parâmetro `signature` contendo o HMAC-SHA1 (hex, 40 caracteres) do
+  // corpo da requisição, calculado usando o token do webhook como chave
+  // secreta. Validamos recalculando o mesmo HMAC e comparando.
+  const url = new URL(request.url);
+  const signatureRecebida = url.searchParams.get("signature");
+  // Mantemos compatibilidade com a possibilidade de a Kiwify (ou um envio
+  // manual de teste) mandar o token puro em "?token=", caso esse formato
+  // também seja usado em algum cenário.
+  const tokenPuroRecebido = url.searchParams.get("token");
+
+  let assinaturaValida = false;
+
+  if (signatureRecebida) {
+    const hmacCalculado = crypto
+      .createHmac("sha1", KIWIFY_WEBHOOK_TOKEN)
+      .update(rawBody)
+      .digest("hex");
+    // Comparação em tempo constante, só quando os tamanhos já coincidem
+    // (timingSafeEqual lança erro se os buffers tiverem tamanhos
+    // diferentes, então checamos isso antes).
+    assinaturaValida =
+      hmacCalculado.length === signatureRecebida.length &&
+      crypto.timingSafeEqual(Buffer.from(hmacCalculado), Buffer.from(signatureRecebida));
+  } else if (tokenPuroRecebido) {
+    assinaturaValida = tokenPuroRecebido === KIWIFY_WEBHOOK_TOKEN;
   }
 
-  // ── 2. Parse do payload ────────────────────────────────────────────
+  if (!assinaturaValida) {
+    // DIAGNÓSTICO TEMPORÁRIO: mostra o HMAC que CALCULAMOS ao lado do que
+    // FOI RECEBIDO, para confirmar com certeza se a hipótese (HMAC-SHA1
+    // do corpo, usando o token como chave) está correta. Não expõe o
+    // token em si, só os dois hashes resultantes (que não permitem
+    // recuperar o token).
+    const hmacParaDebug = crypto.createHmac("sha1", KIWIFY_WEBHOOK_TOKEN).update(rawBody).digest("hex");
+    console.warn(
+      `Webhook Kiwify recebido com assinatura/token inválido. signature recebida: [${signatureRecebida ?? "ausente"}] | HMAC-SHA1 calculado por nós: [${hmacParaDebug}] | token presente: ${!!tokenPuroRecebido}`
+    );
+    return NextResponse.json({ error: "Assinatura inválida." }, { status: 401 });
+  }
+
+  // ── 3. Parse do payload (já validado) ───────────────────────────────
   let payload: KiwifyWebhookPayload;
   try {
-    payload = await request.json();
+    payload = JSON.parse(rawBody);
   } catch {
     return NextResponse.json({ error: "Payload inválido (JSON malformado)." }, { status: 400 });
   }
