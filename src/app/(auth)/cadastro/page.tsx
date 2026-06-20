@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { createClient } from "@/lib/supabase/client";
 import { analytics, identifyUser } from "@/lib/analytics";
+import { metaPixel } from "@/lib/metaPixel";
 
 export default function CadastroPage() {
   const router = useRouter();
@@ -57,6 +58,7 @@ export default function CadastroPage() {
         identifyUser(data.user.id, { email, name });
       }
       analytics.cadastroConcluido({ metodo: "email" });
+      metaPixel.cadastroConcluido();
       router.push("/dashboard");
       router.refresh();
     } else {
@@ -64,6 +66,7 @@ export default function CadastroPage() {
         identifyUser(data.user.id, { email, name });
       }
       analytics.cadastroConcluido({ metodo: "email" });
+      metaPixel.cadastroConcluido();
       setSuccess(true);
       setLoading(false);
     }

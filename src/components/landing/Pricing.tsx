@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CheckoutLink } from "@/components/analytics/CheckoutLink";
 import { Check, Sparkles, Coins, Crown } from "lucide-react";
 import { TOKEN_PACKAGES } from "@/lib/billing/packages";
 
@@ -133,7 +134,7 @@ export function Pricing() {
                   </li>
                 </ul>
 
-                <a href={checkoutUrl} target="_blank" rel="noopener noreferrer" className="mt-7 block">
+                <CheckoutLink href={checkoutUrl} pacote={p.label} valor={p.priceBRL} className="mt-7 block">
                   <button
                     className={
                       p.highlight
@@ -143,7 +144,7 @@ export function Pricing() {
                   >
                     {p.kind === "assinatura" ? "Assinar agora" : "Comprar agora"}
                   </button>
-                </a>
+                </CheckoutLink>
 
                 <p className="mt-4 text-xs text-navy-400">
                   R$ {p.pricePerTokenBRL.toFixed(2).replace(".", ",")} por token.

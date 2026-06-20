@@ -14,6 +14,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { TrackTokensView } from "@/components/analytics/TrackTokensView";
+import { CheckoutLink } from "@/components/analytics/CheckoutLink";
 import { Badge } from "@/components/ui/Badge";
 import { formatDate } from "@/lib/utils";
 import type { TokenTransaction } from "@/types";
@@ -185,11 +186,11 @@ export default async function TokensPage() {
                     )}
                   </ul>
 
-                  <a href={checkoutUrl} target="_blank" rel="noopener noreferrer">
+                  <CheckoutLink href={checkoutUrl} pacote={p.label} valor={p.priceBRL}>
                     <Button variant={p.highlight ? "primary" : "outline"} className="w-full">
                       {p.kind === "assinatura" ? "Assinar agora" : "Comprar agora"}
                     </Button>
-                  </a>
+                  </CheckoutLink>
                 </CardContent>
               </Card>
             );
