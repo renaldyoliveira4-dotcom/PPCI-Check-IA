@@ -43,7 +43,7 @@ export interface TokenPackage {
   checkoutUrl: string;
 }
 
-export const KIWIFY_PRODUCT_ID_UNICO = "3f195000-6c6b-11f1-b19e-e748c9b07ac1";
+export const KIWIFY_PRODUCT_ID_UNICO = "c895dc40-6cde-11f1-938c-57aaaf64ccf6";
 
 export const TOKEN_PACKAGES: TokenPackage[] = [
   {
@@ -56,7 +56,7 @@ export const TOKEN_PACKAGES: TokenPackage[] = [
     label: "Pacote avulso — 10 tokens",
     description: "Compra única, sem recorrência. Ideal para quem analisa poucos projetos por mês.",
     kiwifyProductId: KIWIFY_PRODUCT_ID_UNICO,
-    checkoutUrl: "https://pay.kiwify.com.br/E5FllSG",
+    checkoutUrl: "https://pay.kiwify.com.br/ONZfkMM",
   },
   {
     id: "assinatura_30",
@@ -69,7 +69,7 @@ export const TOKEN_PACKAGES: TokenPackage[] = [
     description: "Renovação automática mensal. Cancele quando quiser.",
     highlight: true,
     kiwifyProductId: KIWIFY_PRODUCT_ID_UNICO,
-    checkoutUrl: "https://pay.kiwify.com.br/Y9Ar0Ls",
+    checkoutUrl: "https://pay.kiwify.com.br/4qXCK5d",
   },
   {
     id: "assinatura_pro_60",
@@ -81,7 +81,7 @@ export const TOKEN_PACKAGES: TokenPackage[] = [
     label: "Assinatura Pro — 60 tokens/mês",
     description: "Para quem analisa projetos com frequência. Melhor preço por token.",
     kiwifyProductId: KIWIFY_PRODUCT_ID_UNICO,
-    checkoutUrl: "https://pay.kiwify.com.br/loDe4yq",
+    checkoutUrl: "https://pay.kiwify.com.br/lubJYQy",
   },
 ];
 

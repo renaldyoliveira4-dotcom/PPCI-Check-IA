@@ -137,14 +137,8 @@ export async function POST(request: NextRequest) {
   }
 
   if (!assinaturaValida) {
-    // DIAGNÓSTICO TEMPORÁRIO: mostra o HMAC que CALCULAMOS ao lado do que
-    // FOI RECEBIDO, para confirmar com certeza se a hipótese (HMAC-SHA1
-    // do corpo, usando o token como chave) está correta. Não expõe o
-    // token em si, só os dois hashes resultantes (que não permitem
-    // recuperar o token).
-    const hmacParaDebug = crypto.createHmac("sha1", KIWIFY_WEBHOOK_TOKEN).update(rawBody).digest("hex");
     console.warn(
-      `Webhook Kiwify recebido com assinatura/token inválido. signature recebida: [${signatureRecebida ?? "ausente"}] | HMAC-SHA1 calculado por nós: [${hmacParaDebug}] | token presente: ${!!tokenPuroRecebido}`
+      `Webhook Kiwify recebido com assinatura/token inválido. signature presente: ${!!signatureRecebida} | token presente: ${!!tokenPuroRecebido}`
     );
     return NextResponse.json({ error: "Assinatura inválida." }, { status: 401 });
   }
