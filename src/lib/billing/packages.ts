@@ -56,7 +56,7 @@ export const TOKEN_PACKAGES: TokenPackage[] = [
     label: "Pacote avulso — 10 tokens",
     description: "Compra única, sem recorrência. Ideal para quem analisa poucos projetos por mês.",
     kiwifyProductId: KIWIFY_PRODUCT_ID_UNICO,
-    checkoutUrl: "https://pay.kiwify.com.br/E5FlISG",
+    checkoutUrl: "https://pay.kiwify.com.br/E5FllSG",
   },
   {
     id: "assinatura_30",
@@ -81,7 +81,7 @@ export const TOKEN_PACKAGES: TokenPackage[] = [
     label: "Assinatura Pro — 60 tokens/mês",
     description: "Para quem analisa projetos com frequência. Melhor preço por token.",
     kiwifyProductId: KIWIFY_PRODUCT_ID_UNICO,
-    checkoutUrl: "https://pay.kiwify.com.br/IoDe4yq",
+    checkoutUrl: "https://pay.kiwify.com.br/loDe4yq",
   },
 ];
 
