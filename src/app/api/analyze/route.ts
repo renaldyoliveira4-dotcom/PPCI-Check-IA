@@ -8,7 +8,7 @@ import {
   type ModoAnalise,
   type ChecklistNormativoItem,
 } from "@/lib/analysis/checklist";
-import { regra_hidrantes } from "@/lib/analysis/normas/cbmba/rules/sistemas";
+import { regra_hidrantes_corrigida } from "@/lib/analysis/normas/cbmba/rules/hidrantesCorrigido";
 import { classifyOccupancy } from "@/lib/classification/classifyOccupancy";
 import { validatePTS } from "@/lib/classification/validatePTS";
 import {
@@ -47,6 +47,34 @@ export async function POST(req: Request) {
   const { project_id, memorial_file_id, analysis_mode = "geral" } = body;
   if (!project_id) return NextResponse.json({ error: "project_id é obrigatório" }, { status: 400 });
 
+  // 1.5. Rate limiting: impede abuso/custo descontrolado de IA limitando
+  // quantas análises um mesmo usuário pode iniciar em um curto período.
+  // Limite: 5 análises em 10 minutos. Generoso para uso legítimo (ninguém
+  // analisa 5 projetos diferentes em 10 minutos no uso normal), mas
+  // bloqueia scripts/cliques repetidos.
+  const { data: profileForLimit } = await supabase
+    .from("users")
+    .select("is_admin")
+    .eq("id", user.id)
+    .single();
+
+  if (!profileForLimit?.is_admin) {
+    const { data: analisesRecentes, error: rateLimitError } = await supabase.rpc(
+      "contar_analises_recentes",
+      { p_user_id: user.id, p_minutos: 10 }
+    );
+
+    if (!rateLimitError && typeof analisesRecentes === "number" && analisesRecentes >= 5) {
+      return NextResponse.json(
+        {
+          error: "Você atingiu o limite de análises em um curto período. Aguarde alguns minutos e tente novamente.",
+          code: "RATE_LIMITED",
+        },
+        { status: 429 }
+      );
+    }
+  }
+
   // 1. Buscar projeto
   const { data: project, error: projErr } = await supabase
     .from("projects")
@@ -56,18 +84,61 @@ export async function POST(req: Request) {
     .single();
   if (projErr || !project) return NextResponse.json({ error: "Projeto não encontrado" }, { status: 404 });
 
-  // 2. Verificar saldo de tokens (admins não pagam tokens)
+  // 2. Verificar e RESERVAR o token atomicamente, ANTES de processar a
+  // análise (que pode levar minutos). Reservar no início — em vez de só
+  // checar saldo aqui e debitar no fim — impede que duas requisições
+  // concorrentes do mesmo usuário ambas passem a checagem inicial e
+  // processem a análise completa (gastando IA de verdade) antes de uma
+  // delas falhar. Se a análise falhar depois, devolvemos o token.
   const { data: profile } = await supabase
     .from("users")
     .select("tokens, tokens_used, is_admin")
     .eq("id", user.id)
     .single();
-  if (!profile || (!profile.is_admin && profile.tokens < 1)) {
-    return NextResponse.json(
-      { error: "Você não tem tokens disponíveis. Adquira mais para continuar.", code: "INSUFFICIENT_TOKENS" },
-      { status: 402 }
-    );
+  if (!profile) {
+    return NextResponse.json({ error: "Perfil de usuário não encontrado." }, { status: 404 });
   }
+
+  let tokenReservado = false;
+  let tokensRestantes = profile.tokens;
+
+  if (!profile.is_admin) {
+    const { data: debitoResult, error: debitoError } = await supabase.rpc(
+      "debitar_token",
+      { p_user_id: user.id }
+    );
+
+    if (debitoError) {
+      console.error("Erro ao reservar token de forma atômica:", debitoError);
+      return NextResponse.json(
+        { error: "Não foi possível verificar seu saldo de tokens. Tente novamente." },
+        { status: 500 }
+      );
+    }
+
+    const linha = debitoResult?.[0];
+    if (!linha?.sucesso) {
+      return NextResponse.json(
+        { error: "Você não tem tokens disponíveis. Adquira mais para continuar.", code: "INSUFFICIENT_TOKENS" },
+        { status: 402 }
+      );
+    }
+
+    tokenReservado = true;
+    tokensRestantes = linha.novo_saldo;
+  }
+
+  // Helper: devolve o token reservado se a análise falhar em qualquer
+  // etapa a partir daqui — evita cobrar pelo que não foi entregue.
+  const devolverTokenSeReservado = async () => {
+    if (tokenReservado) {
+      await supabase.rpc("creditar_tokens", { p_user_id: user.id, p_quantidade: 1 });
+      await supabase.from("token_transactions").insert({
+        user_id: user.id, amount: 1, reason: "refund",
+        description: "Estorno automático: análise não pôde ser concluída.",
+      });
+    }
+  };
 
   // 3. Buscar arquivos
   const { data: files } = await supabase
@@ -76,6 +147,7 @@ export async function POST(req: Request) {
     .eq("project_id", project_id)
     .order("uploaded_at", { ascending: true });
   if (!files || files.length === 0) {
+    await devolverTokenSeReservado();
     return NextResponse.json({ error: "Nenhum arquivo enviado para este projeto" }, { status: 400 });
   }
 
@@ -108,13 +180,14 @@ export async function POST(req: Request) {
 
   if (plantas.length === 0) {
     await supabase.from("projects").update({ status: "uploaded" }).eq("id", project_id);
+    await devolverTokenSeReservado();
     return NextResponse.json({ error: "Não foi possível baixar as plantas do storage" }, { status: 500 });
   }
 
   // 5. Gerar checklist normativo determinístico
   const grupo = project.occupancy_type?.split("-")[0] ?? "D";
   const divisao = project.occupancy_type ?? "D-1";
-  const checklist = gerarChecklistNormativo({
+  const checklistBase = gerarChecklistNormativo({
     area_construida: project.built_area ?? 0,
     altura: (project.floors ?? 1) * 3,
     grupo,
@@ -124,6 +197,28 @@ export async function POST(req: Request) {
     has_basement: false,
     analysis_mode,
   });
+
+  // 5b. Corrigir o item de hidrantes ANTES de montar o prompt da IA — sem
+  // isso, a IA recebe (e repete na análise textual) o item antigo que usava
+  // a Tabela 3 da IT-22 como fonte de obrigatoriedade, mesmo que o item
+  // estruturado seja corrigido depois da resposta da IA (passo 9b). É essa
+  // correção "tardia demais" que permitia a IA escrever frases do tipo
+  // "IT-22/2016 não isenta edificações D-1..." mesmo com o resultado final
+  // estruturado já corrigido.
+  const itemHidrantePreIA = regra_hidrantes_corrigida({
+    area_construida: project.built_area ?? 0,
+    altura: (project.floors ?? 1) * 3,
+    grupo,
+    divisao,
+    risco: "MODERADO",
+    floors: project.floors ?? 1,
+    analysis_mode,
+  });
+  const checklist = itemHidrantePreIA
+    ? (checklistBase.some((it) => it.id === "IT22-hidrantes")
+        ? checklistBase.map((it) => (it.id === "IT22-hidrantes" ? itemHidrantePreIA : it))
+        : [...checklistBase, itemHidrantePreIA])
+    : checklistBase;
 
   // 6. Buscar trechos normativos relevantes
   const trechosPorItem = buscarTrechosPorChecklist(checklist, 2);
@@ -141,6 +236,7 @@ export async function POST(req: Request) {
   } catch (e: unknown) {
     const err = e as Error;
     await supabase.from("projects").update({ status: "uploaded" }).eq("id", project_id);
+    await devolverTokenSeReservado();
     return NextResponse.json({ error: `Falha ao chamar a IA: ${err.message}` }, { status: 500 });
   }
 
@@ -177,12 +273,17 @@ export async function POST(req: Request) {
       : divisao;
   const grupoFinalClassificacao = divisaoFinalClassificacao.split("-")[0] ?? grupo;
 
-  // 9b. Recalcular item de hidrantes (IT-22) com a carga de incêndio real
-  // extraída do memorial pela IA, em vez do valor genérico usado na geração
-  // inicial do checklist (que ocorreu antes da IA ler o memorial).
+  // 9b. Recalcular item de hidrantes usando o motor corrigido baseado na
+  // matriz normativa do Decreto 16.302/2015 (Tabela 5 / Tabelas 6A-6M), e
+  // NUNCA na Tabela 3 da IT-22 como fonte de obrigatoriedade. Diferente da
+  // versão anterior, este recálculo SEMPRE ocorre — mesmo sem carga de
+  // incêndio extraída pela IA — porque o item gerado na criação inicial do
+  // checklist (gerarChecklistNormativo, antes da IA) podia estar usando a
+  // mesma lógica equivocada e nunca era corrigido quando a IA não extraía
+  // carga de incêndio do memorial.
   let checklistFinal: ChecklistNormativoItem[] = checklist;
-  if (cargaIncendioExtraida !== undefined) {
-    const itemHidranteAtualizado = regra_hidrantes({
+  {
+    const itemHidranteAtualizado = regra_hidrantes_corrigida({
       area_construida: project.built_area ?? 0,
       altura: (project.floors ?? 1) * 3,
       grupo: grupoFinalClassificacao,
@@ -193,9 +294,10 @@ export async function POST(req: Request) {
       carga_incendio: cargaIncendioExtraida,
     });
     if (itemHidranteAtualizado) {
-      checklistFinal = checklist.map((it) =>
-        it.id === "IT22-hidrantes" ? itemHidranteAtualizado : it
-      );
+      const jaTinhaItem = checklist.some((it) => it.id === "IT22-hidrantes");
+      checklistFinal = jaTinhaItem
+        ? checklist.map((it) => (it.id === "IT22-hidrantes" ? itemHidranteAtualizado : it))
+        : [...checklist, itemHidranteAtualizado];
     }
   }
 
@@ -278,6 +380,7 @@ export async function POST(req: Request) {
 
   if (aErr || !analysisRow) {
     await supabase.from("projects").update({ status: "uploaded" }).eq("id", project_id);
+    await devolverTokenSeReservado();
     return NextResponse.json({ error: "Falha ao salvar análise no banco" }, { status: 500 });
   }
 
@@ -335,14 +438,13 @@ export async function POST(req: Request) {
     await supabase.from("analysis_items").insert(itemsToInsert);
   }
 
-  // 12. Atualizar projeto e debitar token (pula débito para admins)
+  // 12. Atualizar projeto (o token já foi debitado atomicamente no início
+  // da requisição — ver passo 2 — para impedir que requisições
+  // concorrentes processassem a análise completa antes de uma delas
+  // falhar no débito).
   await supabase.from("projects").update({ status: "completed" }).eq("id", project_id);
 
-  if (!profile.is_admin) {
-    await supabase.from("users").update({
-      tokens: profile.tokens - 1,
-      tokens_used: profile.tokens_used + 1,
-    }).eq("id", user.id);
+  if (tokenReservado) {
     await supabase.from("token_transactions").insert({
       user_id: user.id, amount: -1, reason: "analysis_consumption",
       reference_id: analysisRow.id,
@@ -353,6 +455,6 @@ export async function POST(req: Request) {
   return NextResponse.json({
     success: true,
     analysis_id: analysisRow.id,
-    tokens_remaining: profile.is_admin ? profile.tokens : profile.tokens - 1,
+    tokens_remaining: tokensRestantes,
   });
 }

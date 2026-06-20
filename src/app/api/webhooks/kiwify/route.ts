@@ -263,20 +263,14 @@ async function creditarTokens(
   pkg: TokenPackage,
   orderId: string | null
 ) {
-  const { data: user, error: fetchError } = await supabase
-    .from("users")
-    .select("tokens")
-    .eq("id", userId)
-    .single();
-
-  if (fetchError || !user) throw new Error("Não foi possível carregar o saldo atual do usuário.");
-
-  const novoSaldo = (user.tokens as number) + pkg.tokens;
-
-  const { error: updateError } = await supabase
-    .from("users")
-    .update({ tokens: novoSaldo })
-    .eq("id", userId);
+  // Crédito atômico via função do banco — soma direto no banco (tokens =
+  // tokens + N), sem ler um valor previamente e escrevê-lo de volta. Isso
+  // evita perder créditos se dois webhooks (ex: compra + renovação quase
+  // simultâneas) forem processados ao mesmo tempo para o mesmo usuário.
+  const { data: novoSaldo, error: updateError } = await supabase.rpc(
+    "creditar_tokens",
+    { p_user_id: userId, p_quantidade: pkg.tokens }
+  );
 
   if (updateError) throw new Error("Falha ao creditar tokens: " + updateError.message);
 
@@ -300,24 +294,13 @@ async function reverterTokens(
   orderId: string | null,
   eventType: string
 ) {
-  const { data: user, error: fetchError } = await supabase
-    .from("users")
-    .select("tokens")
-    .eq("id", userId)
-    .single();
-
-  if (fetchError || !user) throw new Error("Não foi possível carregar o saldo atual do usuário.");
-
-  // Não deixa saldo negativo: se o cliente já usou os tokens, retiramos só
-  // o que ainda está disponível.
-  const saldoAtual = user.tokens as number;
-  const aRetirar = Math.min(pkg.tokens, saldoAtual);
-  const novoSaldo = saldoAtual - aRetirar;
-
-  const { error: updateError } = await supabase
-    .from("users")
-    .update({ tokens: novoSaldo })
-    .eq("id", userId);
+  // Reversão atômica via função do banco — subtrai direto no banco, nunca
+  // deixando saldo negativo (GREATEST(tokens - N, 0) dentro da função),
+  // sem depender de um valor de saldo lido previamente pela aplicação.
+  const { data: novoSaldo, error: updateError } = await supabase.rpc(
+    "reverter_tokens",
+    { p_user_id: userId, p_quantidade: pkg.tokens }
+  );
 
   if (updateError) throw new Error("Falha ao reverter tokens: " + updateError.message);
 
@@ -325,7 +308,7 @@ async function reverterTokens(
 
   const { error: txError } = await supabase.from("token_transactions").insert({
     user_id: userId,
-    amount: -aRetirar,
+    amount: -pkg.tokens,
     reason: "refund",
     reference_id: null,
     description: `${motivo} via Kiwify — ${pkg.label} (pedido ${orderId ?? "sem ID"})`,
