@@ -208,7 +208,7 @@ export function HeroUpload() {
                       Analisar meu projeto agora
                     </h2>
                     <p className="text-sm text-navy-500">
-                      Envie as pranchas do projeto
+                      Envie as pranchas e o memorial descritivo
                     </p>
                   </div>
                   <div className="inline-flex items-center gap-1.5 rounded-full bg-status-ok-bg px-2.5 py-1 text-xs font-semibold text-status-ok">
@@ -222,8 +222,8 @@ export function HeroUpload() {
                   onChange={setFiles}
                   disabled={processing}
                   maxFiles={5}
-                  label="Arraste as pranchas aqui"
-                  sublabel="PDF, PNG ou JPG · até 32 MB cada"
+                  label="Arraste as pranchas + memorial aqui"
+                  sublabel="PDF, PNG ou JPG · até 32 MB cada · pranchas e memorial juntos"
                 />
 
                 {error && (
@@ -248,7 +248,7 @@ export function HeroUpload() {
                 >
                   <Sparkles className="h-4 w-4" />
                   {files.length === 0
-                    ? "Adicione pranchas para começar"
+                    ? "Adicione as pranchas + memorial"
                     : "Analisar meu projeto agora"}
                 </Button>
 
