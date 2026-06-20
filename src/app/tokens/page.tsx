@@ -17,22 +17,7 @@ import { TrackTokensView } from "@/components/analytics/TrackTokensView";
 import { Badge } from "@/components/ui/Badge";
 import { formatDate } from "@/lib/utils";
 import type { TokenTransaction } from "@/types";
-
-const PACOTES = [
-  {
-    id: "lancamento",
-    tokens: 30,
-    preco: 29.9,
-    precoFormatado: "R$ 29,90",
-    precoSufixo: "/mês",
-    precoUnitario: "30 tokens mensais",
-    destaque: true,
-    icon: Sparkles,
-    cor: "ember",
-    badge: "Valor de lançamento",
-    economia: "Preço promocional por tempo limitado",
-  },
-];
+import { TOKEN_PACKAGES } from "@/lib/billing/packages";
 
 const reasonLabels: Record<string, string> = {
   signup_bonus: "Bônus de boas-vindas",
@@ -132,104 +117,89 @@ export default async function TokensPage() {
       <div className="mb-10">
         <div className="mb-4 flex items-baseline justify-between">
           <h2 className="font-display text-xl font-semibold text-navy-900">
-            Plano de lançamento
+            Pacotes de tokens
           </h2>
           <p className="text-xs text-navy-500">
-            Pagamento em breve · Pix, cartão e boleto
+            Pagamento via Kiwify · Pix, cartão e boleto
           </p>
         </div>
 
-        <div className="mx-auto grid max-w-md gap-4 md:max-w-sm">
-          {PACOTES.map((p) => {
-            const Icon = p.icon;
+        <div className="grid gap-4 sm:grid-cols-3">
+          {TOKEN_PACKAGES.map((p) => {
+            const checkoutUrl = profile?.email
+              ? `${p.checkoutUrl}?email=${encodeURIComponent(profile.email)}`
+              : p.checkoutUrl;
+
             return (
               <Card
                 key={p.id}
-                className={
-                  p.destaque
-                    ? "relative ring-2 ring-ember-500 ring-offset-2"
-                    : ""
-                }
+                className={p.highlight ? "relative ring-2 ring-ember-500 ring-offset-2" : ""}
               >
-                {p.badge && (
+                {p.highlight && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-ember-500 px-3 py-1 text-xs font-bold uppercase tracking-wider text-white shadow">
-                    {p.badge}
+                    Mais popular
                   </div>
                 )}
                 <CardContent>
-                  <div
-                    className={`mb-3 inline-flex h-10 w-10 items-center justify-center rounded-lg ${
-                      p.cor === "ember"
-                        ? "bg-ember-50 text-ember-600"
-                        : "bg-navy-50 text-navy-700"
-                    }`}
-                  >
-                    <Icon className="h-5 w-5" />
+                  <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-lg bg-ember-50 text-ember-600">
+                    <Coins className="h-5 w-5" />
                   </div>
 
                   <h3 className="font-display text-2xl font-bold text-navy-900">
-                    {p.tokens} tokens/mês
+                    {p.tokens} tokens
+                    {p.kind === "assinatura" && <span className="text-base font-normal text-navy-500">/mês</span>}
                   </h3>
 
-                  <p className="mt-1 text-sm text-navy-500">
-                    Valor promocional para os primeiros usuários validarem a
-                    plataforma.
-                  </p>
+                  <p className="mt-1 text-sm text-navy-500">{p.description}</p>
 
                   <div className="my-5">
                     <p className="font-display text-3xl font-bold text-navy-900">
-                      {p.precoFormatado}
-                      <span className="text-base font-normal text-navy-500">{p.precoSufixo}</span>
+                      R$ {p.priceBRL.toFixed(2).replace(".", ",")}
+                      {p.kind === "assinatura" && (
+                        <span className="text-base font-normal text-navy-500">/mês</span>
+                      )}
                     </p>
-                    <p className="text-xs text-navy-500">{p.precoUnitario}</p>
+                    <p className="text-xs text-navy-500">
+                      R$ {p.pricePerTokenBRL.toFixed(2).replace(".", ",")} por token
+                    </p>
                   </div>
-
-                  {p.economia && (
-                    <div className="mb-4 inline-flex items-center gap-1 rounded-full bg-status-ok-bg px-2 py-0.5 text-xs font-semibold text-status-ok">
-                      <Check className="h-3 w-3" />
-                      {p.economia}
-                    </div>
-                  )}
 
                   <ul className="mb-6 space-y-2 text-sm text-navy-700">
                     <li className="flex items-start gap-2">
                       <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-status-ok" />
-                      30 tokens por mês
+                      {p.kind === "assinatura" ? "Renovação automática mensal" : "Sem recorrência"}
                     </li>
                     <li className="flex items-start gap-2">
                       <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-status-ok" />
-                      Até 8 pranchas por análise completa
+                      Análise completa com checklist normativo
                     </li>
                     <li className="flex items-start gap-2">
                       <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-status-ok" />
-                      Memorial descritivo + checklist normativo
+                      Relatório em PDF
                     </li>
-                    <li className="flex items-start gap-2">
-                      <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-status-ok" />
-                      Histórico de projetos
-                    </li>
+                    {p.kind === "assinatura" && (
+                      <li className="flex items-start gap-2">
+                        <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-status-ok" />
+                        Cancele quando quiser
+                      </li>
+                    )}
                   </ul>
 
-                  <Button
-                    variant={p.destaque ? "primary" : "outline"}
-                    className="w-full"
-                    disabled
-                    title="Pagamento em breve"
-                  >
-                    Começar agora
-                  </Button>
-
-                  <p className="mt-3 text-xs text-navy-400">
-                    Preço promocional por tempo limitado. O valor poderá ser
-                    reajustado conforme evolução da plataforma. Análises
-                    maiores ou com muitas pranchas poderão consumir mais
-                    tokens conforme a complexidade.
-                  </p>
+                  <a href={checkoutUrl} target="_blank" rel="noopener noreferrer">
+                    <Button variant={p.highlight ? "primary" : "outline"} className="w-full">
+                      {p.kind === "assinatura" ? "Assinar agora" : "Comprar agora"}
+                    </Button>
+                  </a>
                 </CardContent>
               </Card>
             );
           })}
         </div>
+
+        <p className="mt-4 text-center text-xs text-navy-400">
+          Pagamento processado de forma segura pela Kiwify. Os tokens são liberados
+          automaticamente após a confirmação do pagamento.
+        </p>
       </div>
 
       {/* Extrato */}
