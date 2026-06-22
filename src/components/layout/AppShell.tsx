@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { StateSelector } from "@/components/layout/StateSelector";
 import { WhatsAppButton } from "@/components/layout/WhatsAppButton";
+import { FeedbackButton } from "@/components/layout/FeedbackButton";
 import { SITE_CONFIG } from "@/lib/config";
 import { resetUser } from "@/lib/analytics";
 
@@ -261,6 +262,7 @@ export function AppShell({
         number={SITE_CONFIG.whatsappNumber}
         defaultMessage={SITE_CONFIG.whatsappDefaultMessage}
       />
+      <FeedbackButton />
     </div>
   );
 }
