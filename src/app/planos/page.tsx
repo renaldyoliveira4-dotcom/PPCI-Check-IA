@@ -1,26 +1,12 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Sparkles } from "lucide-react";
+import { ArrowLeft, Sparkles, Coins } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { AppShell } from "@/components/layout/AppShell";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Pricing } from "@/components/landing/Pricing";
-
-const planLabels: Record<string, { label: string; description: string }> = {
-  free: {
-    label: "Inicial",
-    description: "Plano gratuito — 1 projeto ativo por mês.",
-  },
-  pro: {
-    label: "Profissional",
-    description: "Projetos ilimitados e recursos avançados.",
-  },
-  business: {
-    label: "Escritório",
-    description: "Para equipes e múltiplos usuários.",
-  },
-};
+import { TOKEN_PACKAGES } from "@/lib/billing/packages";
 
 export default async function PlanosPage() {
   const supabase = createClient();
@@ -32,12 +18,18 @@ export default async function PlanosPage() {
 
   const { data: profile } = await supabase
     .from("users")
-    .select("name, email, plan")
+    .select("name, email, tokens, subscription_status, subscription_plan_id, subscription_renews_at")
     .eq("id", user.id)
     .single();
 
-  const currentPlan = profile?.plan ?? "free";
-  const planInfo = planLabels[currentPlan] ?? planLabels.free;
+  const assinaturaAtiva = profile?.subscription_status === "active";
+  const pacoteAtivo = assinaturaAtiva
+    ? TOKEN_PACKAGES.find((p) => p.id === profile?.subscription_plan_id)
+    : null;
+
+  const dataRenovacao = profile?.subscription_renews_at
+    ? new Date(profile.subscription_renews_at).toLocaleDateString("pt-BR")
+    : null;
 
   return (
     <AppShell userName={profile?.name} userEmail={profile?.email}>
@@ -58,22 +50,34 @@ export default async function PlanosPage() {
         </p>
       </div>
 
-      {/* Plano atual */}
+      {/* Situação atual da conta */}
       <Card className="mb-10">
         <CardContent>
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-start gap-4">
               <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-ember-50">
-                <Sparkles className="h-5 w-5 text-ember-600" />
+                {assinaturaAtiva ? (
+                  <Sparkles className="h-5 w-5 text-ember-600" />
+                ) : (
+                  <Coins className="h-5 w-5 text-ember-600" />
+                )}
               </div>
               <div>
                 <div className="mb-1 flex items-center gap-2">
                   <p className="font-display font-semibold text-navy-900">
-                    Plano atual: {planInfo.label}
+                    {assinaturaAtiva && pacoteAtivo
+                      ? `Assinatura: ${pacoteAtivo.label}`
+                      : "Sem assinatura ativa"}
                   </p>
-                  <Badge variant="ember">Ativo</Badge>
+                  <Badge variant={assinaturaAtiva ? "ember" : "default"}>
+                    {assinaturaAtiva ? "Ativa" : `${profile?.tokens ?? 0} tokens`}
+                  </Badge>
                 </div>
-                <p className="text-sm text-navy-600">{planInfo.description}</p>
+                <p className="text-sm text-navy-600">
+                  {assinaturaAtiva
+                    ? `Renovação automática${dataRenovacao ? ` em ${dataRenovacao}` : ""}. Cancele quando quiser.`
+                    : `Você tem ${profile?.tokens ?? 0} tokens disponíveis. Compre um pacote avulso ou assine para receber tokens todo mês.`}
+                </p>
               </div>
             </div>
           </div>
@@ -83,11 +87,6 @@ export default async function PlanosPage() {
       {/* Planos disponíveis - reusando componente da landing */}
       <div className="-mx-4 sm:-mx-6 lg:-mx-8">
         <Pricing />
-      </div>
-
-      <div className="mt-8 rounded-lg border border-navy-100 bg-navy-50/40 p-4 text-xs text-navy-600">
-        Pagamentos e cobrança serão habilitados em breve. Por enquanto, todos os
-        usuários têm acesso ao plano Inicial.
       </div>
     </AppShell>
   );
