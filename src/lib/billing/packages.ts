@@ -17,6 +17,15 @@
 
 export type PackageKind = "avulso" | "assinatura";
 
+/**
+ * Quantos tokens são debitados por análise concluída. Alterado de 1 para 2
+ * em 24/06/2026 (decisão de produto, para melhorar a margem por venda).
+ * Mantido em sincronia manual com a função `debitar_token` no banco — se
+ * alterar este valor, alterar também a migration correspondente no
+ * Supabase.
+ */
+export const TOKENS_POR_ANALISE = 2;
+
 export interface TokenPackage {
   id: string;
   kind: PackageKind;
@@ -101,5 +110,15 @@ export function findPackageByKiwifyProductId(kiwifyProductId: string): TokenPack
  */
 export function findPackageByAmountCents(amountCents: number): TokenPackage | undefined {
   return TOKEN_PACKAGES.find((p) => Math.abs(p.priceCents - amountCents) <= 1);
+}
+
+/**
+ * Converte uma quantidade de tokens em número de análises equivalentes,
+ * usando a regra atual (TOKENS_POR_ANALISE). Usar esta função em vez de
+ * dividir manualmente em cada componente, para manter um único lugar a
+ * atualizar se a regra mudar novamente no futuro.
+ */
+export function tokensParaAnalises(tokens: number): number {
+  return Math.floor(tokens / TOKENS_POR_ANALISE);
 }
 

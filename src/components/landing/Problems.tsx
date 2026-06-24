@@ -4,7 +4,7 @@ const planosToken = [
   {
     icon: FileText,
     title: "Análise simples",
-    consumo: "Consome 1 token",
+    consumo: "Consome 2 tokens",
     items: [
       "Indicada para projeto pequeno",
       "Até 3 pranchas",
@@ -14,7 +14,7 @@ const planosToken = [
   {
     icon: Layers,
     title: "Análise completa",
-    consumo: "Consome 2 ou 3 tokens",
+    consumo: "Consome 2 tokens",
     items: [
       "Indicada para projeto com mais pranchas e memorial",
       "Até 8 pranchas",
@@ -24,7 +24,7 @@ const planosToken = [
   {
     icon: Boxes,
     title: "Análise grande",
-    consumo: "Consome 5 ou mais tokens",
+    consumo: "Consome 2 tokens",
     items: [
       "Indicada para projetos maiores",
       "Muitos arquivos",
@@ -47,8 +47,7 @@ export function Problems() {
           </h2>
           <p className="mt-4 text-navy-600">
             Tokens são créditos usados para realizar pré-análises. Cada
-            análise simples consome 1 token. Análises maiores ou com muitas
-            pranchas podem consumir mais tokens conforme a complexidade.
+            análise consome 2 tokens, independente do tamanho do projeto.
           </p>
         </div>
 

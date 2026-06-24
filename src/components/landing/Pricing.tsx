@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { CheckoutLink } from "@/components/analytics/CheckoutLink";
 import { Check, Sparkles, Coins, Crown } from "lucide-react";
-import { TOKEN_PACKAGES } from "@/lib/billing/packages";
+import { TOKEN_PACKAGES, tokensParaAnalises } from "@/lib/billing/packages";
 
 const BENEFICIOS_COMUNS = [
   "Análise completa com checklist normativo",
@@ -48,7 +48,7 @@ export function Pricing() {
             <ul className="space-y-2.5 text-sm text-navy-700">
               {[
                 "10 tokens grátis, uma vez por conta",
-                "Equivalente a até 10 análises simples",
+                "Equivalente a até 5 análises simples",
                 "Sem cartão de crédito",
                 "Upload de plantas em PDF",
               ].map((item) => (
@@ -66,7 +66,7 @@ export function Pricing() {
             </Link>
 
             <div className="mt-4 space-y-1 text-xs text-navy-400">
-              <p>Cada análise simples consome 1 token.</p>
+              <p>Cada análise simples consome 2 tokens.</p>
               <p>Projetos maiores podem consumir mais tokens.</p>
             </div>
           </div>
@@ -110,7 +110,7 @@ export function Pricing() {
                   )}
                 </div>
 
-                <div className="mb-6 inline-flex items-center gap-1.5 rounded-full bg-ember-50 px-3 py-1 text-xs font-semibold text-ember-700">
+                <div className="mb-2 inline-flex items-center gap-1.5 rounded-full bg-ember-50 px-3 py-1 text-xs font-semibold text-ember-700">
                   {isPro ? (
                     <Crown className="h-3.5 w-3.5" />
                   ) : (
@@ -118,6 +118,9 @@ export function Pricing() {
                   )}
                   {p.tokens} tokens{p.kind === "assinatura" ? "/mês" : ""}
                 </div>
+                <p className="mb-6 text-xs font-medium text-navy-500">
+                  = {tokensParaAnalises(p.tokens)} análises{p.kind === "assinatura" ? "/mês" : ""}
+                </p>
 
                 <ul className="space-y-2.5 text-sm text-navy-700">
                   {BENEFICIOS_COMUNS.map((item) => (

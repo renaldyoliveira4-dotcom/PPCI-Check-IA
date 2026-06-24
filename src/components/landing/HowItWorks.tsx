@@ -66,8 +66,7 @@ export function HowItWorks() {
         </div>
 
         <p className="mx-auto mt-12 max-w-2xl text-center text-sm text-navy-500">
-          Cada análise simples consome 1 token. Projetos maiores podem
-          consumir mais tokens conforme quantidade de pranchas e complexidade.
+          Cada análise consome 2 tokens, independente do tamanho do projeto.
         </p>
       </div>
     </section>

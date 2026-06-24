@@ -18,7 +18,7 @@ import { CheckoutLink } from "@/components/analytics/CheckoutLink";
 import { Badge } from "@/components/ui/Badge";
 import { formatDate } from "@/lib/utils";
 import type { TokenTransaction } from "@/types";
-import { TOKEN_PACKAGES } from "@/lib/billing/packages";
+import { TOKEN_PACKAGES, tokensParaAnalises } from "@/lib/billing/packages";
 
 const reasonLabels: Record<string, string> = {
   signup_bonus: "Bônus de boas-vindas",
@@ -69,7 +69,7 @@ export default async function TokensPage() {
           Tokens de análise
         </h1>
         <p className="mt-1 text-navy-600">
-          Cada análise consome 1 token. Compre pacotes para analisar mais
+          Cada análise consome 2 tokens. Compre pacotes para analisar mais
           projetos.
         </p>
       </div>
@@ -150,6 +150,9 @@ export default async function TokensPage() {
                     {p.tokens} tokens
                     {p.kind === "assinatura" && <span className="text-base font-normal text-navy-500">/mês</span>}
                   </h3>
+                  <p className="text-sm font-medium text-ember-700">
+                    = {tokensParaAnalises(p.tokens)} análises{p.kind === "assinatura" ? "/mês" : ""}
+                  </p>
 
                   <p className="mt-1 text-sm text-navy-500">{p.description}</p>
 
@@ -248,7 +251,7 @@ export default async function TokensPage() {
 
       <p className="mt-8 text-xs text-navy-500">
         Tokens são adquiridos uma única vez e não expiram. Cada análise com IA
-        consome 1 token, independente do número de pranchas enviadas.
+        consome 2 tokens, independente do número de pranchas enviadas.
       </p>
     </AppShell>
   );

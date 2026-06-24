@@ -253,7 +253,7 @@ export function HeroUpload() {
                 </Button>
 
                 <p className="mt-3 text-center text-xs text-navy-500">
-                  Cada análise simples consome 1 token · Sem cartão de crédito
+                  Cada análise consome 2 tokens · Sem cartão de crédito
                 </p>
               </div>
             </div>
