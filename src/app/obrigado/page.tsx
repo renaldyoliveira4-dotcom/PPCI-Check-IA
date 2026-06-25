@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { createClient } from "@/lib/supabase/client";
 import { Logo } from "@/components/Logo";
-import { metaPixel } from "@/lib/metaPixel";
+import { metaPixel, lerContextoCheckout, limparContextoCheckout } from "@/lib/metaPixel";
 
 export default function ObrigadoPage() {
   const [logado, setLogado] = useState<boolean | null>(null);
@@ -17,13 +17,20 @@ export default function ObrigadoPage() {
     supabase.auth.getUser().then(({ data }) => {
       setLogado(!!data.user);
     });
-    // Disparado aqui porque esta página só é alcançada após a Kiwify
-    // confirmar o pagamento e redirecionar o cliente — não temos o valor
-    // exato/pacote neste ponto (a Kiwify não passa esses dados na URL de
-    // redirecionamento), então registramos a conversão sem valor
-    // específico. O crédito real de tokens já acontece via webhook,
-    // independente deste evento de analytics.
-    metaPixel.compraConcluida({ pacote: "desconhecido", valor: 0 });
+
+    // Lê o contexto da compra gravado no sessionStorage durante o InitiateCheckout.
+    // Sem isso, não conseguimos disparar o Purchase com value/currency corretos
+    // (Kiwify não passa esses dados na URL de redirecionamento).
+    const ctx = lerContextoCheckout();
+
+    if (ctx && ctx.valor > 0) {
+      metaPixel.compraConcluida({ pacote: ctx.pacote, valor: ctx.valor });
+      // Limpa o contexto para evitar disparo duplicado em recargas da página.
+      limparContextoCheckout();
+    }
+    // Se ctx for null (cliente fechou aba durante o pagamento, abriu link direto, etc.),
+    // o Purchase NÃO dispara client-side. A Conversions API no webhook Kiwify deve
+    // cobrir esse caso quando for implementada.
   }, []);
 
   return (
