@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { MessageSquarePlus, X, CheckCircle2 } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
 
 type TipoFeedback = "sugestao" | "melhoria" | "bug" | "outro";
 
@@ -43,30 +42,34 @@ export function FeedbackButton() {
     setErro(null);
     setEnviando(true);
 
-    const supabase = createClient();
-    const { data: userData } = await supabase.auth.getUser();
+    try {
+      const response = await fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tipo,
+          mensagem: mensagem.trim(),
+          pagina_origem: pathname,
+        }),
+      });
 
-    if (!userData.user) {
-      setErro("Você precisa estar logado para enviar feedback.");
+      if (!response.ok) {
+        const body = await response.json().catch(() => null);
+        if (response.status === 401) {
+          setErro("Você precisa estar logado para enviar feedback.");
+        } else {
+          setErro(body?.error ?? "Não foi possível enviar agora. Tente novamente em alguns instantes.");
+        }
+        setEnviando(false);
+        return;
+      }
+
       setEnviando(false);
-      return;
+      setEnviado(true);
+    } catch {
+      setErro("Não foi possível enviar agora. Verifique sua conexão e tente de novo.");
+      setEnviando(false);
     }
-
-    const { error } = await supabase.from("feedback").insert({
-      user_id: userData.user.id,
-      tipo,
-      mensagem: mensagem.trim(),
-      pagina_origem: pathname,
-    });
-
-    setEnviando(false);
-
-    if (error) {
-      setErro("Não foi possível enviar agora. Tente novamente em alguns instantes.");
-      return;
-    }
-
-    setEnviado(true);
   };
 
   return (
