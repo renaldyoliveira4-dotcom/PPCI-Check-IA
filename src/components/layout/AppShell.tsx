@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   LayoutDashboard,
   Plus,
@@ -73,23 +73,48 @@ export function AppShell({
     router.refresh();
   };
 
+  // Bloqueia o scroll do conteúdo de fundo enquanto o menu mobile está
+  // aberto — sem isso, ao arrastar o dedo sobre o overlay, a página por
+  // trás do menu rolava junto, dando a sensação de "tela bugada".
+  useEffect(() => {
+    if (mobileOpen) {
+      const previousOverflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = previousOverflow;
+      };
+    }
+  }, [mobileOpen]);
+
   const initials = userName
     ? userName.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase()
     : "?";
 
-  const SidebarContent = ({ mini = false }: { mini?: boolean }) => (
+  const SidebarContent = ({ mini = false, onCloseMobile }: { mini?: boolean; onCloseMobile?: () => void }) => (
     <div className="flex h-full flex-col">
       {/* Logo */}
       <div className={cn(
-        "flex h-20 items-center justify-center border-b border-slate-700/40",
-        mini ? "px-2" : "px-4"
+        "flex h-20 items-center justify-between border-b border-slate-700/40",
+        mini ? "px-2" : "px-4 sm:px-5"
       )}>
         {mini ? (
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-red-500 text-white text-xs font-bold shadow-lg">
-            PC
-          </div>
+          <Link href="/dashboard" aria-label="Ir para o dashboard" className="mx-auto">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-red-500 text-white text-xs font-bold shadow-lg">
+              PC
+            </div>
+          </Link>
         ) : (
-          <Logo variant="white" />
+          <Logo variant="white" href="/dashboard" />
+        )}
+        {/* Botão de fechar — só aparece no drawer mobile, controlado pelo chamador */}
+        {onCloseMobile && (
+          <button
+            onClick={onCloseMobile}
+            className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white lg:hidden"
+            aria-label="Fechar menu"
+          >
+            <X className="h-5 w-5" />
+          </button>
         )}
       </div>
 
@@ -212,7 +237,7 @@ export function AppShell({
 
       {/* Mobile header */}
       <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 shadow-sm lg:hidden">
-        <Logo />
+        <Logo href="/dashboard" />
         <div className="flex items-center gap-2">
           <StateSelector currentState={activeState} />
           <button
@@ -230,16 +255,7 @@ export function AppShell({
         <div className="fixed inset-0 z-40 lg:hidden">
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
           <aside className="absolute inset-y-0 left-0 w-64 bg-slate-900 text-white">
-            <div className="flex h-16 items-center justify-between border-b border-slate-700/40 px-5">
-              <Logo />
-              <button
-                onClick={() => setMobileOpen(false)}
-                className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            <SidebarContent />
+            <SidebarContent onCloseMobile={() => setMobileOpen(false)} />
           </aside>
         </div>
       )}

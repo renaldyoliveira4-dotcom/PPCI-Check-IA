@@ -155,7 +155,7 @@ export function HeroUpload() {
 
               <h1 className="font-display text-3xl font-bold leading-[1.15] text-navy-900 sm:text-4xl lg:text-display-lg">
                 Analise seu projeto PPCI{" "}
-                <span className="relative whitespace-nowrap">
+                <span className="relative sm:whitespace-nowrap">
                   <span className="relative z-10">antes de protocolar</span>
                   <span className="absolute bottom-1 left-0 right-0 -z-0 h-3 bg-ember-300/60" />
                 </span>{" "}
