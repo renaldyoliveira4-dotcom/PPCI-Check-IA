@@ -146,7 +146,7 @@ export function AppShell({
       )}
 
       {/* Nav */}
-      <nav className="flex-1 space-y-5 overflow-y-auto p-3 pt-4">
+      <nav className="min-h-0 flex-1 space-y-5 overflow-y-auto p-3 pt-4">
         {NAV_GROUPS.map((group) => (
           <div key={group.label}>
             {!mini && (
@@ -221,7 +221,7 @@ export function AppShell({
       {/* Sidebar Desktop */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-30 hidden bg-slate-900 text-white transition-all duration-300 lg:flex lg:flex-col",
+          "fixed inset-y-0 left-0 z-30 hidden h-[100dvh] bg-slate-900 text-white transition-all duration-300 lg:flex lg:flex-col",
           collapsed ? "w-[68px]" : "w-64"
         )}
       >
@@ -254,7 +254,7 @@ export function AppShell({
       {mobileOpen && (
         <div className="fixed inset-0 z-40 lg:hidden">
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
-          <aside className="absolute inset-y-0 left-0 w-64 bg-slate-900 text-white">
+          <aside className="absolute inset-y-0 left-0 h-[100dvh] w-64 bg-slate-900 text-white">
             <SidebarContent onCloseMobile={() => setMobileOpen(false)} />
           </aside>
         </div>
