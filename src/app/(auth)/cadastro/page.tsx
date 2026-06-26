@@ -37,6 +37,9 @@ export default function CadastroPage() {
       password,
       options: {
         data: { name },
+        // Este valor é usado pelo template de e-mail como {{ .RedirectTo }}
+        // -- o destino final, DEPOIS que /auth/confirm já trocou o token
+        // pela sessão. Ver src/app/auth/confirm/route.ts.
         emailRedirectTo: `${window.location.origin}/dashboard`,
       },
     });
