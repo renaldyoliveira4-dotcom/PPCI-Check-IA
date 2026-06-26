@@ -22,6 +22,7 @@ import { createClient } from "@/lib/supabase/client";
 import { StateSelector } from "@/components/layout/StateSelector";
 import { WhatsAppButton } from "@/components/layout/WhatsAppButton";
 import { FeedbackButton } from "@/components/layout/FeedbackButton";
+import { InstallAppButton } from "@/components/InstallAppButton";
 import { SITE_CONFIG } from "@/lib/config";
 import { resetUser } from "@/lib/analytics";
 
@@ -200,6 +201,12 @@ export function AppShell({
               )}
             </div>
           </div>
+        )}
+        {!mini && (
+          <InstallAppButton
+            variant="link"
+            className="mb-1 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-400 transition-colors hover:bg-slate-800 hover:text-white"
+          />
         )}
         <button
           onClick={handleSignOut}
