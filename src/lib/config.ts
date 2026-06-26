@@ -8,7 +8,7 @@ export const SITE_CONFIG = {
    * Formato internacional sem símbolos: "5575999998888"
    * (55 = Brasil, 75 = DDD, resto = número)
    */
-  whatsappNumber: "5575981716603", // ← TROCAR AQUI
+  whatsappNumber: "5575982857536",
 
   /** E-mail de contato/suporte. */
   supportEmail: "contato@ppcicheck.com.br",
