@@ -7,6 +7,7 @@
  */
 
 import { REGRAS_CORE } from "./normas/cbmba/rules/core";
+import { gerarChecklistViaMatriz } from "./normas/cbmba/rules/checklistViaMatriz";
 import {
   regra_hidrantes,
   regra_alarme,
@@ -147,41 +148,41 @@ export function gerarChecklistNormativo(
   }
 
   // ── Modo geral (padrão) ───────────────────────────────────────────────
+  //
+  // Os sistemas "universais" (extintores, saídas, iluminação, sinalização,
+  // brigada, controle de materiais) e os condicionados a área/altura
+  // (hidrantes, alarme/detecção, sprinklers, compartimentação, segurança
+  // estrutural) vêm agora do motor de matriz normativa completo
+  // (determineRequiredSystems → Tabela 5/6 do Decreto 16.302/2015), que
+  // substitui a lógica antiga abaixo. Essa troca corrige duas falhas
+  // identificadas no motor anterior: (1) Brigada de Incêndio não era
+  // exigida para enquadramentos pequenos da Tabela 5, contrariando a
+  // norma; (2) Controle de Materiais de Acabamento (IT-10) nunca era
+  // verificado, em nenhum caso.
+  //
+  // GLP e Pressurização de escada continuam vindo das regras antigas
+  // (regra_glp, regra_pressurizacao) porque a matriz normativa nova
+  // ainda não modela esses dois sistemas como itens determinísticos
+  // próprios.
 
-  const items: ChecklistNormativoItem[] = [];
+  const viaMatriz = gerarChecklistViaMatriz({
+    area_construida,
+    altura,
+    grupo,
+    divisao,
+    floors,
+    has_basement,
+  });
 
-  // Itens core (sempre obrigatórios)
-  for (const r of REGRAS_CORE) {
-    items.push(toItem(r, true, "Exigência básica para todas as edificações"));
-  }
+  const items: ChecklistNormativoItem[] = [...viaMatriz.items];
 
-  // Hidrantes (área > 750 m²)
-  const h = regra_hidrantes(snap);
-  if (h) items.push(h);
-
-  // Alarme/Detecção
-  const a = regra_alarme(snap);
-  if (a) items.push(a);
-
-  // Brigada
-  const b = regra_brigada(snap);
-  if (b) items.push(b);
-
-  // Sprinklers
-  const s = regra_sprinklers(snap);
-  if (s) items.push(s);
-
-  // Pressurização de escada
+  // Pressurização de escada (ainda não cobrida pela matriz nova)
   const p = regra_pressurizacao(snap);
   if (p) items.push(p);
 
-  // GLP
+  // GLP (ainda não cobrido pela matriz nova)
   const g = regra_glp(snap);
   if (g) items.push(g);
-
-  // Estrutural/compartimentação
-  const e = regra_estrutural(snap);
-  if (e) items.push(e);
 
   return items;
 }
